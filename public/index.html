@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Connectivity Chit-Fund Platform</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="theme-light">
+  <div id="app-container">
+    <!-- Top Global Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v12M16 10H8" />
+            <circle cx="12" cy="12" r="3" fill="#C28723" />
+          </svg>
+          <div class="brand-text">
+            <span class="brand-title">Local Chit-Fund</span>
+            <span class="brand-subtitle">Anchored Trust & Balanced Ledger</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Viewport Mode Switcher -->
+        <div class="viewport-toggle">
+          <button id="view-mobile-btn" class="view-btn active" title="Switch to Mobile Frame">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Mobile App
+          </button>
+          <button id="view-desktop-btn" class="view-btn" title="Switch to Full Operations Console">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Operations Console
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- One-Click Role Switcher -->
+        <div class="role-selector-wrapper">
+          <label for="role-select" class="role-label">Active Role:</label>
+          <select id="role-select" class="role-select">
+            <option value="usr-member-1">Ramesh Kumar (Member #1 - Indiranagar)</option>
+            <option value="usr-member-2">Priya Sharma (Member #2 - Indiranagar)</option>
+            <option value="usr-member-3">Suresh Patel (Member #3 - Koramangala)</option>
+            <option value="usr-organizer-1">Lakshmi Devi (Group Organizer)</option>
+            <option value="usr-collector-1">Anand Verma (Field Agent / Collector)</option>
+            <option value="usr-opsadmin-1">Rajesh Nair (Operations Admin)</option>
+            <option value="usr-compliance-1">Dr. Sunita Rao (Compliance Reviewer)</option>
+            <option value="usr-finance-1">Vikram Malhotra (Finance Admin)</option>
+          </select>
+        </div>
+
+        <div class="user-badge" id="current-user-badge">
+          <span class="user-role-tag" id="badge-role">MEMBER</span>
+          <span class="user-name" id="badge-name">Ramesh Kumar</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="main-content" id="main-viewport">
+      <div class="device-frame" id="device-wrapper">
+        <!-- Device Top Speaker & Camera Notch (for mobile mode) -->
+        <div class="mobile-notch">
+          <div class="notch-speaker"></div>
+          <div class="notch-camera"></div>
+        </div>
+
+        <div class="app-screen">
+          <!-- Sub-Nav / Tabs -->
+          <nav class="nav-tabs" id="nav-tabs">
+            <button class="nav-tab active" data-tab="tab-explore">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              <span>Explore</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-auction">
+              <span class="badge-pulse live-dot"></span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 7 3 3m-7.5 7.5L5 22l4.5-4.5m0 0 7.5-7.5L14 7 6.5 14.5z"/></svg>
+              <span>Live Auction</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-payments">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <span>Payments</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-ledger">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="13" y2="12"/></svg>
+              <span>Ledger</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-operations">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Operations</span>
+            </button>
+          </nav>
+
+          <!-- Tab Contents -->
+          <div class="tab-body">
+            <!-- TAB 1: EXPLORE & PROXIMITY DISCOVERY -->
+            <section id="tab-explore" class="tab-pane active">
+              <div class="section-banner">
+                <div class="banner-title">Local Chit Discovery</div>
+                <div class="banner-desc">Find trusted, locally anchored community chit groups within your neighborhood.</div>
+              </div>
+
+              <!-- Location Discovery Controls -->
+              <div class="discovery-bar card">
+                <div class="discovery-field">
+                  <label for="locality-filter">Anchor Locality:</label>
+                  <select id="locality-filter" class="form-input">
+                    <option value="">All Bengaluru Localities</option>
+                  </select>
+                </div>
+                <div class="discovery-field">
+                  <label for="radius-slider">Radius: <span id="radius-val">15</span> km</label>
+                  <input type="range" id="radius-slider" min="1" max="25" value="15" class="slider-input">
+                </div>
+                <button id="search-nearby-btn" class="btn btn-primary">Find Groups</button>
+              </div>
+
+              <!-- Nearby Groups Grid -->
+              <div id="groups-container" class="groups-grid">
+                <!-- Injected via JavaScript -->
+              </div>
+            </section>
+
+            <!-- TAB 2: LIVE AUCTION ROOM -->
+            <section id="tab-auction" class="tab-pane">
+              <div class="auction-header-card card">
+                <div class="auction-status-bar">
+                  <span class="status-pill status-active">AUCTION ACTIVE</span>
+                  <span class="cycle-pill">Cycle #2 of 20</span>
+                </div>
+                <h2 id="auction-group-title">Indiranagar Traders & Artisans Chit</h2>
+                <div class="auction-meta-grid">
+                  <div class="meta-box">
+                    <span class="meta-label">Total Pool</span>
+                    <span class="meta-val">₹5,00,000</span>
+                  </div>
+                  <div class="meta-box">
+                    <span class="meta-label">Min Discount (5%)</span>
+                    <span class="meta-val">₹25,000</span>
+                  </div>
+                  <div class="meta-box">
+                    <span class="meta-label">Max Discount (30%)</span>
+                    <span class="meta-val">₹1,50,000</span>
+                  </div>
+                  <div class="meta-box highlight">
+                    <span class="meta-label">Current Winning Bid</span>
+                    <span class="meta-val text-gold" id="current-high-bid">₹45,000</span>
+                  </div>
+                </div>
+
+                <!-- Organizer / Admin Auction Controls -->
+                <div class="auction-admin-actions" id="auction-admin-actions">
+                  <button id="close-auction-btn" class="btn btn-gold">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Close Auction & Post Ledger Settlement
+                  </button>
+                </div>
+              </div>
+
+              <div class="auction-two-col">
+                <!-- Bidding Panel -->
+                <div class="card bidding-card">
+                  <h3>Submit Auction Bid</h3>
+                  <p class="text-muted">Offer a higher discount to take the chit pool. Higher discount means higher dividend for fellow members!</p>
+
+                  <form id="bid-form" class="bid-form">
+                    <div class="form-group">
+                      <label for="bid-amount-input">Discount Amount (₹):</label>
+                      <div class="input-with-symbol">
+                        <span class="currency-symbol">₹</span>
+                        <input type="number" id="bid-amount-input" class="form-input" min="25000" max="150000" step="1000" value="50000" required>
+                      </div>
+                      <small class="text-hint">Between ₹25,000 and ₹1,50,000 (Chit Funds Act 1982 Section 14 statutory limit)</small>
+                    </div>
+
+                    <div class="bid-summary-preview">
+                      <div class="summary-row">
+                        <span>Net Take-Home Prize:</span>
+                        <strong id="preview-prize">₹4,50,000</strong>
+                      </div>
+                      <div class="summary-row">
+                        <span>Organizer Fee (5%):</span>
+                        <span id="preview-commission">₹25,000</span>
+                      </div>
+                      <div class="summary-row text-success">
+                        <span>Est. Dividend / Member:</span>
+                        <strong id="preview-dividend">₹5,000</strong>
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submit-bid-btn">
+                      Place Competitive Bid
+                    </button>
+                  </form>
+                </div>
+
+                <!-- Live Bids Feed -->
+                <div class="card bid-feed-card">
+                  <div class="card-header">
+                    <h3>Live Auction Bid Stream</h3>
+                    <span class="refresh-indicator">● Real-time</span>
+                  </div>
+                  <div id="bids-list" class="bids-list">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Closed Auction Result Snapshot (if closed) -->
+              <div id="auction-result-card" class="card result-card" style="display: none;">
+                <!-- Injected via JavaScript upon closing -->
+              </div>
+            </section>
+
+            <!-- TAB 3: PAYMENTS & OBLIGATIONS -->
+            <section id="tab-payments" class="tab-pane">
+              <div class="section-banner">
+                <div class="banner-title">Contributions & Collection</div>
+                <div class="banner-desc">Scheduled cycle dues, instant UPI payments, and field collector assisted receipts.</div>
+              </div>
+
+              <!-- Obligations List -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3>Your Scheduled Cycle Obligations</h3>
+                  <span class="text-muted" id="user-phone-display">Logged in: 9876543210</span>
+                </div>
+                <div id="obligations-container" class="obligations-list">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </div>
+
+              <!-- Field Agent Cash Collection Drawer (visible to COLLECTOR role) -->
+              <div id="collector-panel" class="card collector-card" style="display: none;">
+                <div class="card-header">
+                  <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Field Agent: Assisted Cash Collection
+                  </h3>
+                  <span class="status-pill status-agent">Collector Portal</span>
+                </div>
+                <p class="text-muted">Record verified cash received from member. Emits an immutable receipt and matches the digital ledger.</p>
+                <form id="collector-cash-form" class="collector-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="collector-member-select">Select Member Obligation:</label>
+                      <select id="collector-member-select" class="form-input">
+                        <!-- Populated via JS -->
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="collector-notes">Collector Notes / Physical Receipt #:</label>
+                      <input type="text" id="collector-notes" class="form-input" placeholder="e.g. Received at shop, signed slip #402">
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-secondary">Record Cash Collection & Issue Digital Receipt</button>
+                </form>
+              </div>
+            </section>
+
+            <!-- TAB 4: BALANCED DOUBLE-ENTRY LEDGER -->
+            <section id="tab-ledger" class="tab-pane">
+              <div class="ledger-summary-header card">
+                <div class="ledger-title-group">
+                  <h2>Double-Entry Balanced General Ledger</h2>
+                  <span class="reconciled-badge" id="reconciliation-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    100% BALANCED (Variance = ₹0.00)
+                  </span>
+                </div>
+                <p class="text-muted">Every transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.</p>
+
+                <!-- Financial Controls Cards -->
+                <div class="financial-metrics-row">
+                  <div class="stat-card">
+                    <span class="stat-label">Total System Debits</span>
+                    <span class="stat-val text-primary" id="stat-total-debit">₹11,25,000.00</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-label">Total System Credits</span>
+                    <span class="stat-val text-primary" id="stat-total-credit">₹11,25,000.00</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-label">System Variance</span>
+                    <span class="stat-val text-success" id="stat-variance">₹0.00</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-label">Total Journal Transactions</span>
+                    <span class="stat-val" id="stat-tx-count">4</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart of Accounts Trial Balance -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3>Chart of Accounts (Trial Balance)</h3>
+                  <span class="text-muted">General Ledger Chart 1001-4002</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="chart-accounts-table">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Account Name</th>
+                        <th>Account Type</th>
+                        <th class="text-right">Balance (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="chart-accounts-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Detailed Journal Entries -->
+              <div class="card">
+                <div class="card-header">
+                  <h3>Immutable Journal Transaction Records</h3>
+                  <span class="text-muted">Append-only audit trail</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="transactions-table">
+                    <thead>
+                      <tr>
+                        <th>Tx ID</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Debit (₹)</th>
+                        <th>Credit (₹)</th>
+                        <th>Balanced?</th>
+                        <th>Timestamp (UTC)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="transactions-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <!-- TAB 5: OPERATIONS & COMPLIANCE CONSOLE -->
+            <section id="tab-operations" class="tab-pane">
+              <div class="section-banner">
+                <div class="banner-title">Operations, Governance & Compliance</div>
+                <div class="banner-desc">Role-based controls for Payout Maker-Checker, KYC Verification, Disputes, and Tamper-Evident Audit.</div>
+              </div>
+
+              <!-- Maker-Checker Payout Authorization -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Finance Maker-Checker: Winner Payout Authorization
+                  </h3>
+                  <span class="status-pill status-finance">Finance Control</span>
+                </div>
+                <p class="text-muted">Strict Separation of Duties: An administrator who initiates (Maker) cannot approve and disburse (Checker).</p>
+                <div class="table-responsive">
+                  <table class="data-table" id="payouts-table">
+                    <thead>
+                      <tr>
+                        <th>Payout ID</th>
+                        <th>Cycle</th>
+                        <th>Beneficiary</th>
+                        <th>Bank Account / IFSC</th>
+                        <th>Net Amount (₹)</th>
+                        <th>Status</th>
+                        <th>Maker / Checker</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="payouts-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- KYC Cases Review Queue -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3>e-KYC & Aadhaar Verification Queue</h3>
+                  <span class="status-pill status-compliance">Compliance Desk</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="kyc-table">
+                    <thead>
+                      <tr>
+                        <th>Case ID</th>
+                        <th>Applicant</th>
+                        <th>Masked Document</th>
+                        <th>Provider Reference</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="kyc-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Disputes & Support Desk -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3>Member Disputes & Compensating Reversals</h3>
+                  <button id="raise-dispute-btn" class="btn btn-sm btn-outline">+ Raise Dispute</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="disputes-table">
+                    <thead>
+                      <tr>
+                        <th>Case ID</th>
+                        <th>Raised By</th>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="disputes-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Cryptographic Audit Events Trail -->
+              <div class="card">
+                <div class="card-header">
+                  <h3>Tamper-Evident SHA-256 Audit Trail</h3>
+                  <span class="text-muted">Cryptographic Proof of State Integrity</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table" id="audit-table">
+                    <thead>
+                      <tr>
+                        <th>Timestamp (UTC)</th>
+                        <th>Actor</th>
+                        <th>Action</th>
+                        <th>Object</th>
+                        <th>After State SHA-256 Hash</th>
+                      </tr>
+                    </thead>
+                    <tbody id="audit-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- UPI Payment Modal -->
+    <div id="payment-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Pay Chit Contribution via UPI</h3>
+          <button class="modal-close" id="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-content">
+          <div class="qr-placeholder">
+            <svg width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="#0B2545" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              <rect x="5" y="5" width="3" height="3" fill="#0B2545"/><rect x="16" y="5" width="3" height="3" fill="#0B2545"/><rect x="5" y="16" width="3" height="3" fill="#0B2545"/>
+              <line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="7" x2="12" y2="7.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="12" y1="17" x2="12" y2="17.01"/><line x1="17" y1="12" x2="17" y2="12.01"/>
+            </svg>
+          </div>
+          <div class="payment-details">
+            <div class="pay-amount-label">Amount Payable:</div>
+            <div class="pay-amount-val" id="modal-pay-amount">₹25,000</div>
+            <div class="pay-upi-id text-muted">VPA: indiranagar.chitfund@upi</div>
+          </div>
+          <div class="upi-app-options">
+            <button class="upi-app-btn" id="pay-gpay-btn">Simulate Google Pay</button>
+            <button class="upi-app-btn" id="pay-phonepe-btn">Simulate PhonePe</button>
+            <button class="upi-app-btn" id="pay-paytm-btn">Simulate Paytm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispute Modal -->
+    <div id="dispute-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Raise Support Dispute</h3>
+          <button class="modal-close" id="close-dispute-modal-btn">&times;</button>
+        </div>
+        <form id="dispute-form" class="modal-content">
+          <div class="form-group">
+            <label for="dispute-category">Dispute Category:</label>
+            <select id="dispute-category" class="form-input">
+              <option value="PAYMENT_DISPUTE">Payment / Billing Discrepancy</option>
+              <option value="AUCTION_DISPUTE">Auction Rule / Bid Challenge</option>
+              <option value="ORGANIZER_MISCONDUCT">Organizer Conduct</option>
+              <option value="GENERAL_SUPPORT">General Support</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dispute-title">Title:</label>
+            <input type="text" id="dispute-title" class="form-input" placeholder="Brief summary of dispute" required>
+          </div>
+          <div class="form-group">
+            <label for="dispute-desc">Description & Evidence Details:</label>
+            <textarea id="dispute-desc" class="form-input" rows="3" placeholder="Provide full context for compliance review" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Submit Dispute for Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
