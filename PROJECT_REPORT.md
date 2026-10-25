@@ -16,8 +16,8 @@
 | Financial Model | Strict Double-Entry Balanced General Ledger ($\sum Debits = \sum Credits$) | Verified |
 | Statutory Rules | Indian Chit Funds Act, 1982 (30% statutory max cap, 5% commission) | Verified |
 | Privacy Compliance | Digital Personal Data Protection (DPDP) Act, 2023 (Coarse Location, Masked Aadhaar) | Verified |
-| Client Presentation | Responsive Web UI (Dual Mode: Mobile Smartphone Viewport + Desktop Operations Console) | Verified |
-| Automated Test Pack | 27 Unit and Integration Tests Across 5 Test Suites | 27 / 27 Passed (100%) |
+| Client Presentation | Dual-Portal Responsive Web UI: "Join Chit" (Dues at top, Filters) vs "Host Chit" (Cash Desk, Wizard) | Verified |
+| Automated Test Pack | 35 Unit and Integration Tests Across 6 Test Suites | 35 / 35 Passed (100%) |
 | Runtime Dependencies | Zero External NPM Dependencies (100% Native Node.js Built-ins) | Zero-Friction Setup |
 
 ---
@@ -39,6 +39,20 @@
   8. Automated test suite with 27 comprehensive tests.
 - **Verification:** `node --test tests/*.test.js` executed with 27 passed, 0 failed. Double-entry ledger verified with zero system variance.
 
+### CHG-0006 — Dual-Portal Experience, Real Passwords & Government Multi-Document Accreditation
+- **Date:** 2026-10-25
+- **Status:** Done
+- **Area:** Full-Stack Auth, Dual-Portal UI, Multi-Government Accreditation, Offline Host Cash Desk
+- **What happened:**
+  1. Built dual-portal switching ("Join a Chit" vs "Host / Manage Chit").
+  2. Implemented active monthly dues banner prominently anchored at top of member experience.
+  3. Integrated multi-parameter chit discovery filters (Locality, Max Installment, Pool Size, Nearby Radius, Government Verified Only).
+  4. Added multi-document government trust verification: Masked Aadhaar (DPDP Act compliant), PAN card, State Chit Registrar License #, Bank Guarantee Reference, and Trust Scores.
+  5. Built Host Offline Cash Verification Desk: members submit cash request $\rightarrow$ Host reviews in dashboard $\rightarrow$ Host clicks "Verify & Mark Paid" $\rightarrow$ Ledger is balanced and cleared.
+  6. Implemented real PBKDF2 password hashing (10,000 rounds, SHA-512) and combined Host-User account model.
+  7. Added production deployment assets: `Dockerfile`, `docker-compose.yml`, `ecosystem.config.cjs`, and `DEPLOYMENT.md`.
+- **Verification:** Automated test suite expanded to 35 tests across 6 test suites (`tests/auth.test.js` included), 35/35 passing in ~209ms.
+
 ---
 
 ## 3. Decision Log Updates
@@ -51,6 +65,7 @@
 | DEC-0004 | 2026-08-25 | Defer blockchain; implement cryptographic SHA-256 hash chains | Validates operational fit without smart contract overhead | Approved |
 | DEC-0005 | 2026-08-25 | Enforce Maker-Checker dual control on payouts | Prevents single-operator fraudulent disbursements | Approved |
 | DEC-0006 | 2026-10-25 | Use Node.js built-in `node:sqlite`, `node:crypto`, and zero external dependencies | Ensures 100% reproducible git clones with instant setup on Windows, Linux, and macOS | Approved |
+| DEC-0007 | 2026-10-25 | Combined Host-User account model with dual portal | Any registered user is a member and can upgrade to an accredited Host | Approved |
 
 ---
 
@@ -58,12 +73,13 @@
 
 | Test Suite | Tests Executed | Passed | Failed | Invariants Verified |
 |---|:---:|:---:|:---:|---|
+| `auth.test.js` | 6 | 6 | 0 | PBKDF2 password hashing, duplicate phone check, session tokens, combined host upgrade, logout |
 | `ledger.test.js` | 4 | 4 | 0 | Strict balance ($\sum Debits = \sum Credits$), rejection of unbalanced entries, zero trial balance variance |
 | `auction.test.js` | 6 | 6 | 0 | 5% floor, 30% statutory ceiling, prior-winner disqualification, dividend math, HMAC signing |
 | `payment.test.js` | 5 | 5 | 0 | UPI QR generation, webhook settlement, duplicate replay idempotency, hybrid cash collection, Host offline cash verification |
 | `locality.test.js` | 3 | 3 | 0 | Haversine distance accuracy, proximity radius sorting, coarse coordinates anonymization |
 | `security.test.js` | 5 | 5 | 0 | RBAC matrix, Maker payout initiation, Separation of Duties (Maker cannot be Checker), SHA-256 audit logs |
-| **Total** | **28** | **28** | **0** | **100% Pass Rate (Duration: 193ms)** |
+| **Total** | **35** | **35** | **0** | **100% Pass Rate (Duration: ~209ms)** |
 
 ---
 

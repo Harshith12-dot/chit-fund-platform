@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  chit-fund-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chit-fund-platform
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_PATH=/usr/src/app/data/chitfund.db
+    volumes:
+      - chitfund_data:/usr/src/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/localities"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  chitfund_data:
+    driver: local
