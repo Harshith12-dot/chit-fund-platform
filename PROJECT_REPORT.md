@@ -60,10 +60,10 @@
 |---|:---:|:---:|:---:|---|
 | `ledger.test.js` | 4 | 4 | 0 | Strict balance ($\sum Debits = \sum Credits$), rejection of unbalanced entries, zero trial balance variance |
 | `auction.test.js` | 6 | 6 | 0 | 5% floor, 30% statutory ceiling, prior-winner disqualification, dividend math, HMAC signing |
-| `payment.test.js` | 4 | 4 | 0 | UPI QR generation, webhook settlement, duplicate replay idempotency, hybrid cash collection |
+| `payment.test.js` | 5 | 5 | 0 | UPI QR generation, webhook settlement, duplicate replay idempotency, hybrid cash collection, Host offline cash verification |
 | `locality.test.js` | 3 | 3 | 0 | Haversine distance accuracy, proximity radius sorting, coarse coordinates anonymization |
 | `security.test.js` | 5 | 5 | 0 | RBAC matrix, Maker payout initiation, Separation of Duties (Maker cannot be Checker), SHA-256 audit logs |
-| **Total** | **27** | **27** | **0** | **100% Pass Rate (Duration: 225ms)** |
+| **Total** | **28** | **28** | **0** | **100% Pass Rate (Duration: 193ms)** |
 
 ---
 
