@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="theme-light">
   <div id="app-container">
@@ -15,125 +15,341 @@
     <header class="app-header">
       <div class="header-left">
         <div class="brand-logo">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 6v12M16 10H8" />
-            <circle cx="12" cy="12" r="3" fill="#C28723" />
-          </svg>
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v12M16 10H8" />
+              <circle cx="12" cy="12" r="2.5" fill="#C28723" />
+            </svg>
+          </div>
           <div class="brand-text">
             <span class="brand-title">Local Chit-Fund</span>
-            <span class="brand-subtitle">Anchored Trust & Balanced Ledger</span>
+            <span class="brand-subtitle">Govt Verified • Anchored Trust • Balanced Ledger</span>
           </div>
         </div>
       </div>
 
+      <!-- Portal Mode Selector (Join Chit vs Host Chit) -->
       <div class="header-center">
-        <!-- Viewport Mode Switcher -->
-        <div class="viewport-toggle">
-          <button id="view-mobile-btn" class="view-btn active" title="Switch to Mobile Frame">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-            Mobile App
+        <div class="portal-toggle-pill">
+          <button id="portal-join-btn" class="portal-btn active" title="Join and Discover Nearby Trusted Chits">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            Join a Chit
           </button>
-          <button id="view-desktop-btn" class="view-btn" title="Switch to Full Operations Console">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            Operations Console
+          <button id="portal-host-btn" class="portal-btn" title="Host, Manage, and Verify Chit Collections">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4"/></svg>
+            Host / Manage Chit
           </button>
         </div>
       </div>
 
       <div class="header-right">
-        <!-- One-Click Role Switcher -->
+        <!-- Viewport Switcher -->
+        <div class="viewport-toggle">
+          <button id="view-mobile-btn" class="view-btn active" title="Smartphone View">📱 Mobile</button>
+          <button id="view-desktop-btn" class="view-btn" title="Full Console View">💻 Desktop</button>
+        </div>
+
+        <!-- Role Selector -->
         <div class="role-selector-wrapper">
-          <label for="role-select" class="role-label">Active Role:</label>
-          <select id="role-select" class="role-select">
+          <select id="role-select" class="role-select" title="Switch Demonstration Persona">
             <option value="usr-member-1">Ramesh Kumar (Member #1 - Indiranagar)</option>
             <option value="usr-member-2">Priya Sharma (Member #2 - Indiranagar)</option>
             <option value="usr-member-3">Suresh Patel (Member #3 - Koramangala)</option>
-            <option value="usr-organizer-1">Lakshmi Devi (Group Organizer)</option>
-            <option value="usr-collector-1">Anand Verma (Field Agent / Collector)</option>
+            <option value="usr-organizer-1">Lakshmi Devi (Govt Registered Host)</option>
+            <option value="usr-collector-1">Anand Verma (Field Collector)</option>
             <option value="usr-opsadmin-1">Rajesh Nair (Operations Admin)</option>
             <option value="usr-compliance-1">Dr. Sunita Rao (Compliance Reviewer)</option>
             <option value="usr-finance-1">Vikram Malhotra (Finance Admin)</option>
           </select>
         </div>
-
-        <div class="user-badge" id="current-user-badge">
-          <span class="user-role-tag" id="badge-role">MEMBER</span>
-          <span class="user-name" id="badge-name">Ramesh Kumar</span>
-        </div>
       </div>
     </header>
 
-    <!-- Main Workspace Container -->
+    <!-- Main Viewport -->
     <main class="main-content" id="main-viewport">
-      <div class="device-frame" id="device-wrapper">
-        <!-- Device Top Speaker & Camera Notch (for mobile mode) -->
+      <div class="device-frame mode-mobile" id="device-wrapper">
+        <!-- Smartphone Notch (visible in mobile mode) -->
         <div class="mobile-notch">
           <div class="notch-speaker"></div>
           <div class="notch-camera"></div>
         </div>
 
         <div class="app-screen">
-          <!-- Sub-Nav / Tabs -->
-          <nav class="nav-tabs" id="nav-tabs">
-            <button class="nav-tab active" data-tab="tab-explore">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              <span>Explore</span>
+          <!-- Secondary Navigation Tabs -->
+          <nav class="sub-nav-tabs">
+            <button class="sub-tab active" data-subtab="main-portal-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span id="nav-primary-label">Explore Chits</span>
             </button>
-            <button class="nav-tab" data-tab="tab-auction">
-              <span class="badge-pulse live-dot"></span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 7 3 3m-7.5 7.5L5 22l4.5-4.5m0 0 7.5-7.5L14 7 6.5 14.5z"/></svg>
+            <button class="sub-tab" data-subtab="auction-room-view">
+              <span class="pulse-indicator"></span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 7 3 3m-7.5 7.5L5 22l4.5-4.5m0 0 7.5-7.5L14 7 6.5 14.5z"/></svg>
               <span>Live Auction</span>
             </button>
-            <button class="nav-tab" data-tab="tab-payments">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-              <span>Payments</span>
+            <button class="sub-tab" data-subtab="ledger-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="13" y2="12"/></svg>
+              <span>Balanced Ledger</span>
             </button>
-            <button class="nav-tab" data-tab="tab-ledger">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="13" y2="12"/></svg>
-              <span>Ledger</span>
-            </button>
-            <button class="nav-tab" data-tab="tab-operations">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span>Operations</span>
+            <button class="sub-tab" data-subtab="compliance-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Trust & Governance</span>
             </button>
           </nav>
 
-          <!-- Tab Contents -->
-          <div class="tab-body">
-            <!-- TAB 1: EXPLORE & PROXIMITY DISCOVERY -->
-            <section id="tab-explore" class="tab-pane active">
-              <div class="section-banner">
-                <div class="banner-title">Local Chit Discovery</div>
-                <div class="banner-desc">Find trusted, locally anchored community chit groups within your neighborhood.</div>
-              </div>
+          <div class="screen-scrollable">
+            <!-- ========================================================== -->
+            <!-- 1. JOIN CHIT PORTAL (MEMBER VIEW)                          -->
+            <!-- ========================================================== -->
+            <div id="join-chit-portal" class="portal-section active-portal">
+              <!-- TOP DUE BANNER: "Get the due at top" -->
+              <section class="due-banner-container" id="top-dues-section">
+                <!-- Injected via JavaScript from /api/me/dues -->
+              </section>
 
-              <!-- Location Discovery Controls -->
-              <div class="discovery-bar card">
-                <div class="discovery-field">
-                  <label for="locality-filter">Anchor Locality:</label>
-                  <select id="locality-filter" class="form-input">
-                    <option value="">All Bengaluru Localities</option>
-                  </select>
+              <!-- Discovery & Filter Header -->
+              <section class="portal-header-section">
+                <div class="portal-headline">
+                  <h2>Discover Verified Local Chit Funds</h2>
+                  <p class="portal-sub">Join legally governed chits anchored in your neighborhood with verified organizers.</p>
                 </div>
-                <div class="discovery-field">
-                  <label for="radius-slider">Radius: <span id="radius-val">15</span> km</label>
-                  <input type="range" id="radius-slider" min="1" max="25" value="15" class="slider-input">
+
+                <!-- Multi-Parameter Filters Bar -->
+                <div class="filters-card card">
+                  <div class="filter-row-primary">
+                    <div class="filter-control flex-2">
+                      <label for="locality-dropdown">Locality / City Anchor:</label>
+                      <select id="locality-dropdown" class="input-select">
+                        <option value="">All Bengaluru Areas</option>
+                      </select>
+                    </div>
+
+                    <div class="filter-control flex-2">
+                      <label for="pool-amount-filter">Chit Pool Size:</label>
+                      <select id="pool-amount-filter" class="input-select">
+                        <option value="ALL">All Pool Amounts</option>
+                        <option value="MICRO">Micro (< ₹1,00,000)</option>
+                        <option value="SMALL">Small (₹1,00,000 - ₹5,00,000)</option>
+                        <option value="MEDIUM">Medium (₹5,00,000 - ₹10,00,000)</option>
+                        <option value="LARGE">Large (> ₹10,00,000)</option>
+                      </select>
+                    </div>
+
+                    <div class="filter-control flex-2">
+                      <label for="monthly-due-filter">Monthly Installment:</label>
+                      <select id="monthly-due-filter" class="input-select">
+                        <option value="ALL">All Installments</option>
+                        <option value="UNDER_10K">< ₹10,000 / month</option>
+                        <option value="10K_25K">₹10,000 - ₹25,000 / month</option>
+                        <option value="25K_50K">₹25,000 - ₹50,000 / month</option>
+                        <option value="ABOVE_50K">> ₹50,000 / month</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="filter-row-secondary">
+                    <div class="filter-control slider-control">
+                      <div class="slider-header">
+                        <label for="proximity-radius">Proximity Radius:</label>
+                        <span class="slider-badge" id="proximity-radius-label">15 km</span>
+                      </div>
+                      <input type="range" id="proximity-radius" min="1" max="30" value="15" class="range-slider">
+                    </div>
+
+                    <div class="filter-checkbox-group">
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="filter-govt-only" checked>
+                        <span class="checkmark"></span>
+                        <span class="chk-label">🛡️ Only Govt-Registered Hosts (State Chit Registrar License)</span>
+                      </label>
+                    </div>
+
+                    <button id="apply-filters-btn" class="btn btn-primary btn-sm">
+                      Apply Filters
+                    </button>
+                  </div>
                 </div>
-                <button id="search-nearby-btn" class="btn btn-primary">Find Groups</button>
+              </section>
+
+              <!-- Chit Groups Grid -->
+              <section class="chits-listing-section">
+                <div id="join-chits-grid" class="chits-grid">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </section>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- 2. HOST / MANAGE CHIT PORTAL (ORGANIZER VIEW)             -->
+            <!-- ========================================================== -->
+            <div id="host-chit-portal" class="portal-section" style="display: none;">
+              <!-- Host Identity & Regulatory Status Banner -->
+              <section class="host-profile-banner card">
+                <div class="host-banner-header">
+                  <div class="host-avatar-group">
+                    <div class="host-avatar">🏛️</div>
+                    <div>
+                      <div class="host-name-row">
+                        <h3 id="host-portal-name">Lakshmi Devi</h3>
+                        <span class="badge-govt-registered">✔ GOVT REGISTERED HOST</span>
+                      </div>
+                      <p class="text-muted" style="font-size: 0.82rem;">Authorized Chit Fund Organizer under Chit Funds Act 1982</p>
+                    </div>
+                  </div>
+                  <div class="host-trust-metric">
+                    <span class="metric-label">Host Trust Score</span>
+                    <span class="metric-value text-gold" id="host-portal-score">99.4%</span>
+                  </div>
+                </div>
+
+                <div class="host-credentials-grid">
+                  <div class="cred-pill">
+                    <span class="cred-label">State Registrar License</span>
+                    <strong class="font-mono" id="host-portal-license">KA/BLR/REG/2026/0491</strong>
+                  </div>
+                  <div class="cred-pill">
+                    <span class="cred-label">Bank Guarantee Bond</span>
+                    <strong class="font-mono">BG-HDFC-992100 (100% Secured)</strong>
+                  </div>
+                  <div class="cred-pill">
+                    <span class="cred-label">PAN Verification</span>
+                    <strong class="font-mono">ABCDE1234F (Verified NSDL)</strong>
+                  </div>
+                  <div class="cred-pill">
+                    <span class="cred-label">Locality Anchor</span>
+                    <strong>Indiranagar, Bengaluru</strong>
+                  </div>
+                </div>
+              </section>
+
+              <!-- HOST ACTION TABS: VERIFY PAYMENTS vs HOST NEW CHIT -->
+              <div class="host-action-tabs">
+                <button class="host-tab-btn active" data-hosttab="tab-host-verifications">
+                  <span class="pending-alert-badge" id="host-pending-badge">1</span>
+                  ⚡ Verify Offline & Cash Payments
+                </button>
+                <button class="host-tab-btn" data-hosttab="tab-host-create">
+                  ➕ Register & Host New Chit
+                </button>
+                <button class="host-tab-btn" data-hosttab="tab-host-members">
+                  👥 Member Join Requests
+                </button>
               </div>
 
-              <!-- Nearby Groups Grid -->
-              <div id="groups-container" class="groups-grid">
-                <!-- Injected via JavaScript -->
-              </div>
-            </section>
+              <!-- HOST SUB-PANEL 1: PENDING OFFLINE CASH VERIFICATIONS -->
+              <div id="tab-host-verifications" class="host-subpanel active-subpanel">
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3>Offline & Cash Payments Pending Host Verification</h3>
+                      <p class="text-muted" style="font-size: 0.8rem;">When members pay cash in-person or transfer directly, verify and clear the dues below to update the balanced ledger immediately.</p>
+                    </div>
+                  </div>
 
-            <!-- TAB 2: LIVE AUCTION ROOM -->
-            <section id="tab-auction" class="tab-pane">
+                  <div id="host-verifications-list" class="verifications-container">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- HOST SUB-PANEL 2: HOST A NEW CHIT WIZARD -->
+              <div id="tab-host-create" class="host-subpanel" style="display: none;">
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3>Host a New Legally Compliant Chit Fund</h3>
+                      <p class="text-muted" style="font-size: 0.8rem;">Define chit pool amount, member installments, and statutory registrar credentials.</p>
+                    </div>
+                  </div>
+
+                  <form id="host-chit-form" class="host-wizard-form">
+                    <div class="form-grid-2">
+                      <div class="form-group">
+                        <label for="new-chit-name">Chit Group Title:</label>
+                        <input type="text" id="new-chit-name" class="form-input" placeholder="e.g. Indiranagar Traders Monthly Chit" required>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="new-chit-locality">Anchor Locality:</label>
+                        <select id="new-chit-locality" class="form-input" required>
+                          <!-- Populated via JS -->
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                      <div class="form-group">
+                        <label for="new-total-pool">Total Chit Pool (₹):</label>
+                        <div class="input-with-symbol">
+                          <span class="currency-symbol">₹</span>
+                          <input type="number" id="new-total-pool" class="form-input" value="500000" step="50000" min="50000" required>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="new-monthly-due">Monthly Installment (₹):</label>
+                        <div class="input-with-symbol">
+                          <span class="currency-symbol">₹</span>
+                          <input type="number" id="new-monthly-due" class="form-input" value="25000" step="1000" min="1000" required>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="new-duration">Tenure / Max Members:</label>
+                        <select id="new-duration" class="form-input">
+                          <option value="20">20 Months (20 Members)</option>
+                          <option value="10">10 Months (10 Members)</option>
+                          <option value="25">25 Months (25 Members)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Statutory & Trust Registration Inputs -->
+                    <div class="statutory-box">
+                      <div class="statutory-title">📜 Regulatory Compliance & Trust Credentials (Chit Funds Act 1982)</div>
+                      <div class="form-grid-2">
+                        <div class="form-group">
+                          <label for="new-license-num">State Chit Registrar Approval / License #:</label>
+                          <input type="text" id="new-license-num" class="form-input font-mono" value="KA/BLR/REG/2026/0994" required>
+                        </div>
+                        <div class="form-group">
+                          <label for="new-bg-ref">Bank Guarantee Bond Reference (100% Pool):</label>
+                          <input type="text" id="new-bg-ref" class="form-input font-mono" value="BG-HDFC-882200" required>
+                        </div>
+                      </div>
+                      <div class="statutory-note">
+                        ✔ 5% Organizer commission rate enforced.  
+                        ✔ 30% Maximum auction discount ceiling enforced under Section 14.
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-gold btn-block" style="margin-top: 16px;">
+                      Register & Launch Chit for Enrolment
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- HOST SUB-PANEL 3: MEMBER JOIN REQUESTS -->
+              <div id="tab-host-members" class="host-subpanel" style="display: none;">
+                <div class="card">
+                  <div class="card-header">
+                    <h3>Member Join Applications (Indiranagar Traders Chit)</h3>
+                  </div>
+                  <div id="host-join-requests-list">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- 3. LIVE AUCTION ROOM VIEW                                  -->
+            <!-- ========================================================== -->
+            <div id="auction-room-view" class="portal-section" style="display: none;">
               <div class="auction-header-card card">
                 <div class="auction-status-bar">
-                  <span class="status-pill status-active">AUCTION ACTIVE</span>
+                  <span class="status-pill status-active">LIVE AUCTION ACTIVE</span>
                   <span class="cycle-pill">Cycle #2 of 20</span>
                 </div>
                 <h2 id="auction-group-title">Indiranagar Traders & Artisans Chit</h2>
@@ -151,15 +367,13 @@
                     <span class="meta-val">₹1,50,000</span>
                   </div>
                   <div class="meta-box highlight">
-                    <span class="meta-label">Current Winning Bid</span>
+                    <span class="meta-label">Current Highest Bid</span>
                     <span class="meta-val text-gold" id="current-high-bid">₹45,000</span>
                   </div>
                 </div>
 
-                <!-- Organizer / Admin Auction Controls -->
                 <div class="auction-admin-actions" id="auction-admin-actions">
                   <button id="close-auction-btn" class="btn btn-gold">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     Close Auction & Post Ledger Settlement
                   </button>
                 </div>
@@ -169,16 +383,16 @@
                 <!-- Bidding Panel -->
                 <div class="card bidding-card">
                   <h3>Submit Auction Bid</h3>
-                  <p class="text-muted">Offer a higher discount to take the chit pool. Higher discount means higher dividend for fellow members!</p>
+                  <p class="text-muted" style="font-size: 0.8rem;">Bid a higher discount to win the chit pool. Higher discount gives higher dividend for fellow members!</p>
 
                   <form id="bid-form" class="bid-form">
                     <div class="form-group">
                       <label for="bid-amount-input">Discount Amount (₹):</label>
                       <div class="input-with-symbol">
                         <span class="currency-symbol">₹</span>
-                        <input type="number" id="bid-amount-input" class="form-input" min="25000" max="150000" step="1000" value="50000" required>
+                        <input type="number" id="bid-amount-input" class="form-input font-mono" min="25000" max="150000" step="1000" value="50000" required>
                       </div>
-                      <small class="text-hint">Between ₹25,000 and ₹1,50,000 (Chit Funds Act 1982 Section 14 statutory limit)</small>
+                      <small class="text-hint">Between ₹25,000 and ₹1,50,000 (Section 14 statutory limit)</small>
                     </div>
 
                     <div class="bid-summary-preview">
@@ -202,83 +416,37 @@
                   </form>
                 </div>
 
-                <!-- Live Bids Feed -->
+                <!-- Live Bid Stream -->
                 <div class="card bid-feed-card">
                   <div class="card-header">
                     <h3>Live Auction Bid Stream</h3>
                     <span class="refresh-indicator">● Real-time</span>
                   </div>
                   <div id="bids-list" class="bids-list">
-                    <!-- Injected via JavaScript -->
+                    <!-- Populated via JS -->
                   </div>
                 </div>
               </div>
 
-              <!-- Closed Auction Result Snapshot (if closed) -->
+              <!-- Signed Result Card -->
               <div id="auction-result-card" class="card result-card" style="display: none;">
-                <!-- Injected via JavaScript upon closing -->
+                <!-- Injected via JS -->
               </div>
-            </section>
+            </div>
 
-            <!-- TAB 3: PAYMENTS & OBLIGATIONS -->
-            <section id="tab-payments" class="tab-pane">
-              <div class="section-banner">
-                <div class="banner-title">Contributions & Collection</div>
-                <div class="banner-desc">Scheduled cycle dues, instant UPI payments, and field collector assisted receipts.</div>
-              </div>
-
-              <!-- Obligations List -->
-              <div class="card mb-4">
-                <div class="card-header">
-                  <h3>Your Scheduled Cycle Obligations</h3>
-                  <span class="text-muted" id="user-phone-display">Logged in: 9876543210</span>
-                </div>
-                <div id="obligations-container" class="obligations-list">
-                  <!-- Injected via JavaScript -->
-                </div>
-              </div>
-
-              <!-- Field Agent Cash Collection Drawer (visible to COLLECTOR role) -->
-              <div id="collector-panel" class="card collector-card" style="display: none;">
-                <div class="card-header">
-                  <h3>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    Field Agent: Assisted Cash Collection
-                  </h3>
-                  <span class="status-pill status-agent">Collector Portal</span>
-                </div>
-                <p class="text-muted">Record verified cash received from member. Emits an immutable receipt and matches the digital ledger.</p>
-                <form id="collector-cash-form" class="collector-form">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="collector-member-select">Select Member Obligation:</label>
-                      <select id="collector-member-select" class="form-input">
-                        <!-- Populated via JS -->
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label for="collector-notes">Collector Notes / Physical Receipt #:</label>
-                      <input type="text" id="collector-notes" class="form-input" placeholder="e.g. Received at shop, signed slip #402">
-                    </div>
-                  </div>
-                  <button type="submit" class="btn btn-secondary">Record Cash Collection & Issue Digital Receipt</button>
-                </form>
-              </div>
-            </section>
-
-            <!-- TAB 4: BALANCED DOUBLE-ENTRY LEDGER -->
-            <section id="tab-ledger" class="tab-pane">
+            <!-- ========================================================== -->
+            <!-- 4. BALANCED GENERAL LEDGER VIEW                            -->
+            <!-- ========================================================== -->
+            <div id="ledger-view" class="portal-section" style="display: none;">
               <div class="ledger-summary-header card">
                 <div class="ledger-title-group">
                   <h2>Double-Entry Balanced General Ledger</h2>
                   <span class="reconciled-badge" id="reconciliation-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    100% BALANCED (Variance = ₹0.00)
+                    ✔ 100% BALANCED (Variance = ₹0.00)
                   </span>
                 </div>
-                <p class="text-muted">Every transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.</p>
+                <p class="text-muted" style="font-size: 0.85rem;">Every money transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.</p>
 
-                <!-- Financial Controls Cards -->
                 <div class="financial-metrics-row">
                   <div class="stat-card">
                     <span class="stat-label">Total System Debits</span>
@@ -299,19 +467,19 @@
                 </div>
               </div>
 
-              <!-- Chart of Accounts Trial Balance -->
+              <!-- Trial Balance -->
               <div class="card mb-4">
                 <div class="card-header">
                   <h3>Chart of Accounts (Trial Balance)</h3>
                   <span class="text-muted">General Ledger Chart 1001-4002</span>
                 </div>
                 <div class="table-responsive">
-                  <table class="data-table" id="chart-accounts-table">
+                  <table class="data-table">
                     <thead>
                       <tr>
                         <th>Code</th>
                         <th>Account Name</th>
-                        <th>Account Type</th>
+                        <th>Type</th>
                         <th class="text-right">Balance (₹)</th>
                       </tr>
                     </thead>
@@ -322,21 +490,21 @@
                 </div>
               </div>
 
-              <!-- Detailed Journal Entries -->
+              <!-- Transactions Table -->
               <div class="card">
                 <div class="card-header">
                   <h3>Immutable Journal Transaction Records</h3>
                   <span class="text-muted">Append-only audit trail</span>
                 </div>
                 <div class="table-responsive">
-                  <table class="data-table" id="transactions-table">
+                  <table class="data-table">
                     <thead>
                       <tr>
                         <th>Tx ID</th>
                         <th>Type</th>
                         <th>Description</th>
-                        <th>Debit (₹)</th>
-                        <th>Credit (₹)</th>
+                        <th class="text-right">Debit (₹)</th>
+                        <th class="text-right">Credit (₹)</th>
                         <th>Balanced?</th>
                         <th>Timestamp (UTC)</th>
                       </tr>
@@ -347,27 +515,21 @@
                   </table>
                 </div>
               </div>
-            </section>
+            </div>
 
-            <!-- TAB 5: OPERATIONS & COMPLIANCE CONSOLE -->
-            <section id="tab-operations" class="tab-pane">
-              <div class="section-banner">
-                <div class="banner-title">Operations, Governance & Compliance</div>
-                <div class="banner-desc">Role-based controls for Payout Maker-Checker, KYC Verification, Disputes, and Tamper-Evident Audit.</div>
-              </div>
-
+            <!-- ========================================================== -->
+            <!-- 5. COMPLIANCE & GOVERNANCE VIEW                            -->
+            <!-- ========================================================== -->
+            <div id="compliance-view" class="portal-section" style="display: none;">
               <!-- Maker-Checker Payout Authorization -->
               <div class="card mb-4">
                 <div class="card-header">
-                  <h3>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Finance Maker-Checker: Winner Payout Authorization
-                  </h3>
+                  <h3>Finance Maker-Checker: Winner Payout Authorization</h3>
                   <span class="status-pill status-finance">Finance Control</span>
                 </div>
-                <p class="text-muted">Strict Separation of Duties: An administrator who initiates (Maker) cannot approve and disburse (Checker).</p>
+                <p class="text-muted" style="font-size: 0.8rem;">Strict Separation of Duties: An administrator who initiates (Maker) cannot approve and disburse (Checker).</p>
                 <div class="table-responsive">
-                  <table class="data-table" id="payouts-table">
+                  <table class="data-table">
                     <thead>
                       <tr>
                         <th>Payout ID</th>
@@ -387,14 +549,14 @@
                 </div>
               </div>
 
-              <!-- KYC Cases Review Queue -->
+              <!-- KYC Cases -->
               <div class="card mb-4">
                 <div class="card-header">
-                  <h3>e-KYC & Aadhaar Verification Queue</h3>
+                  <h3>e-KYC, Aadhaar & PAN Verification Queue</h3>
                   <span class="status-pill status-compliance">Compliance Desk</span>
                 </div>
                 <div class="table-responsive">
-                  <table class="data-table" id="kyc-table">
+                  <table class="data-table">
                     <thead>
                       <tr>
                         <th>Case ID</th>
@@ -405,46 +567,21 @@
                         <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody id="kyc-body">
+                    <tbody id="kyc-table">
                       <!-- Populated via JS -->
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <!-- Disputes & Support Desk -->
-              <div class="card mb-4">
-                <div class="card-header">
-                  <h3>Member Disputes & Compensating Reversals</h3>
-                  <button id="raise-dispute-btn" class="btn btn-sm btn-outline">+ Raise Dispute</button>
-                </div>
-                <div class="table-responsive">
-                  <table class="data-table" id="disputes-table">
-                    <thead>
-                      <tr>
-                        <th>Case ID</th>
-                        <th>Raised By</th>
-                        <th>Category</th>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody id="disputes-body">
-                      <!-- Populated via JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- Cryptographic Audit Events Trail -->
+              <!-- SHA-256 Audit Trail -->
               <div class="card">
                 <div class="card-header">
                   <h3>Tamper-Evident SHA-256 Audit Trail</h3>
                   <span class="text-muted">Cryptographic Proof of State Integrity</span>
                 </div>
                 <div class="table-responsive">
-                  <table class="data-table" id="audit-table">
+                  <table class="data-table">
                     <thead>
                       <tr>
                         <th>Timestamp (UTC)</th>
@@ -454,19 +591,19 @@
                         <th>After State SHA-256 Hash</th>
                       </tr>
                     </thead>
-                    <tbody id="audit-body">
+                    <tbody id="audit-table">
                       <!-- Populated via JS -->
                     </tbody>
                   </table>
                 </div>
               </div>
-            </section>
+            </div>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- UPI Payment Modal -->
+    <!-- UPI Online Payment Modal -->
     <div id="payment-modal" class="modal-backdrop" style="display: none;">
       <div class="modal-box">
         <div class="modal-header">
@@ -495,32 +632,26 @@
       </div>
     </div>
 
-    <!-- Dispute Modal -->
-    <div id="dispute-modal" class="modal-backdrop" style="display: none;">
+    <!-- Offline Cash Payment Request Modal -->
+    <div id="offline-cash-modal" class="modal-backdrop" style="display: none;">
       <div class="modal-box">
         <div class="modal-header">
-          <h3>Raise Support Dispute</h3>
-          <button class="modal-close" id="close-dispute-modal-btn">&times;</button>
+          <h3>Pay Cash Offline to Host</h3>
+          <button class="modal-close" id="close-offline-modal-btn">&times;</button>
         </div>
-        <form id="dispute-form" class="modal-content">
+        <form id="offline-cash-form" class="modal-content">
+          <p class="text-muted" style="font-size: 0.82rem; margin-bottom: 12px;">
+            Handed physical cash to your Chit Host or Field Agent? Submit details below. Your Host will review and clear your due on their dashboard.
+          </p>
           <div class="form-group">
-            <label for="dispute-category">Dispute Category:</label>
-            <select id="dispute-category" class="form-input">
-              <option value="PAYMENT_DISPUTE">Payment / Billing Discrepancy</option>
-              <option value="AUCTION_DISPUTE">Auction Rule / Bid Challenge</option>
-              <option value="ORGANIZER_MISCONDUCT">Organizer Conduct</option>
-              <option value="GENERAL_SUPPORT">General Support</option>
-            </select>
+            <label>Amount Due:</label>
+            <div class="font-mono text-primary" style="font-size: 1.25rem; font-weight: 800;" id="offline-modal-amount">₹25,000.00</div>
           </div>
           <div class="form-group">
-            <label for="dispute-title">Title:</label>
-            <input type="text" id="dispute-title" class="form-input" placeholder="Brief summary of dispute" required>
+            <label for="offline-cash-notes">Payment Notes / Physical Receipt Details:</label>
+            <textarea id="offline-cash-notes" class="form-input" rows="3" placeholder="e.g. Handed ₹25,000 cash to Lakshmi Devi at Indiranagar shop on Friday evening" required></textarea>
           </div>
-          <div class="form-group">
-            <label for="dispute-desc">Description & Evidence Details:</label>
-            <textarea id="dispute-desc" class="form-input" rows="3" placeholder="Provide full context for compliance review" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block">Submit Dispute for Review</button>
+          <button type="submit" class="btn btn-primary btn-block">Submit for Host Verification</button>
         </form>
       </div>
     </div>

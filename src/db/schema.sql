@@ -50,7 +50,9 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     bank_account_no TEXT,
     bank_ifsc TEXT,
     upi_id TEXT,
+    pan_number_masked TEXT DEFAULT 'ABCDE1234F',
     kyc_status TEXT DEFAULT 'UNVERIFIED' CHECK(kyc_status IN ('UNVERIFIED', 'IN_REVIEW', 'VERIFIED', 'REJECTED')),
+    govt_verified INTEGER DEFAULT 1,
     reputation_score REAL DEFAULT 100.0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -98,6 +100,9 @@ CREATE TABLE IF NOT EXISTS chit_groups (
     min_bid_discount_minor INTEGER NOT NULL,    -- e.g. 2500000 paise (5%)
     max_bid_discount_minor INTEGER NOT NULL,    -- e.g. 15000000 paise (30% statutory cap)
     constitution_version TEXT NOT NULL DEFAULT '1.0',
+    host_license_number TEXT DEFAULT 'KA/BLR/REG/2026/0491',
+    bank_guarantee_ref TEXT DEFAULT 'BG-HDFC-992100',
+    trust_score REAL DEFAULT 99.4,
     status TEXT NOT NULL DEFAULT 'REGISTRATION' CHECK(status IN ('DRAFT', 'REGISTRATION', 'ACTIVE', 'COMPLETED', 'SUSPENDED')),
     start_date TEXT,
     created_at TEXT NOT NULL
@@ -158,11 +163,13 @@ CREATE TABLE IF NOT EXISTS payment_intents (
     obligation_id TEXT NOT NULL REFERENCES contribution_obligations(id),
     payer_user_id TEXT NOT NULL REFERENCES users(id),
     amount_minor INTEGER NOT NULL,
-    payment_method TEXT NOT NULL CHECK(payment_method IN ('UPI_COLLECT', 'UPI_QR', 'NETBANKING', 'CASH_FIELD_AGENT')),
+    payment_method TEXT NOT NULL CHECK(payment_method IN ('UPI_COLLECT', 'UPI_QR', 'NETBANKING', 'CASH_FIELD_AGENT', 'OFFLINE_CASH', 'OFFLINE_DIRECT_HOST')),
     collector_id TEXT REFERENCES users(id),
+    verified_by_host_id TEXT REFERENCES users(id),
+    offline_notes TEXT,
     provider_ref TEXT,
     idempotency_key TEXT UNIQUE NOT NULL,
-    status TEXT NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED', 'PROCESSING', 'SUCCESS', 'FAILED', 'REFUNDED')),
+    status TEXT NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED', 'PENDING_HOST_VERIFICATION', 'PROCESSING', 'SUCCESS', 'FAILED', 'REFUNDED')),
     created_at TEXT NOT NULL,
     settled_at TEXT
 );

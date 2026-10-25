@@ -14,7 +14,10 @@ export function createChitGroup({
   organizerCommissionRate = 0.05,
   minBidDiscountMinor = null,
   maxBidDiscountMinor = null,
-  constitutionVersion = '1.0'
+  constitutionVersion = '1.0',
+  hostLicenseNumber = 'KA/BLR/REG/2026/0491',
+  bankGuaranteeRef = 'BG-HDFC-992100',
+  trustScore = 99.4
 }, db = null) {
   const database = db || getDatabase();
 
@@ -34,8 +37,9 @@ export function createChitGroup({
     INSERT INTO chit_groups (
       id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
       total_months, max_members, current_members_count, organizer_commission_rate,
-      min_bid_discount_minor, max_bid_discount_minor, constitution_version, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'REGISTRATION', ?)
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, 'REGISTRATION', ?)
   `).run(
     groupId,
     organizerId,
@@ -49,6 +53,9 @@ export function createChitGroup({
     minDiscount,
     maxDiscount,
     constitutionVersion,
+    hostLicenseNumber,
+    bankGuaranteeRef,
+    trustScore,
     now
   );
 

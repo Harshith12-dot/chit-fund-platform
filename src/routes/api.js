@@ -106,6 +106,28 @@ export async function handleApiRequest(req, res) {
       return json({ success: true, user: currentUser });
     }
 
+    if (method === 'GET' && pathname === '/api/me/dues') {
+      if (!currentUser) return error('Unauthorized. Please log in.', 401);
+      const { getDatabase } = await import('../db/index.js');
+      const database = getDatabase();
+      const dues = database.prepare(`
+        SELECT o.*, c.sequence_no as cycle_sequence_no, c.due_at as cycle_due_at, c.auction_at,
+               g.id as group_id, g.name as group_name, g.total_pool_minor, g.monthly_contribution_minor,
+               g.host_license_number, g.bank_guarantee_ref, g.trust_score,
+               prof.display_name as organizer_name,
+               m.slot_number
+        FROM contribution_obligations o
+        JOIN chit_cycles c ON o.cycle_id = c.id
+        JOIN chit_groups g ON c.group_id = g.id
+        JOIN group_memberships m ON o.membership_id = m.id
+        JOIN users u_org ON g.organizer_id = u_org.id
+        LEFT JOIN user_profiles prof ON u_org.id = prof.user_id
+        WHERE m.user_id = ?
+        ORDER BY CASE WHEN o.status = 'PENDING' THEN 0 ELSE 1 END, o.due_at ASC
+      `).all(currentUser.id);
+      return json({ success: true, dues });
+    }
+
     if (method === 'PATCH' && pathname === '/api/me') {
       if (!currentUser) return error('Unauthorized.', 401);
       const body = await readBody();
@@ -177,7 +199,10 @@ export async function handleApiRequest(req, res) {
         organizerCommissionRate: body.organizerCommissionRate || 0.05,
         minBidDiscountMinor: body.minBidDiscountMinor,
         maxBidDiscountMinor: body.maxBidDiscountMinor,
-        constitutionVersion: body.constitutionVersion || '1.0'
+        constitutionVersion: body.constitutionVersion || '1.0',
+        hostLicenseNumber: body.hostLicenseNumber || 'KA/BLR/REG/2026/0491',
+        bankGuaranteeRef: body.bankGuaranteeRef || 'BG-HDFC-992100',
+        trustScore: body.trustScore || 99.4
       });
       return json({ success: true, group }, 201);
     }
@@ -298,6 +323,34 @@ export async function handleApiRequest(req, res) {
         notes: body.notes
       });
       return json({ success: true, ...result });
+    }
+
+    params = matchRoute('/api/obligations/:id/offline-cash', pathname);
+    if (method === 'POST' && params) {
+      if (!currentUser) return error('Unauthorized', 401);
+      const body = await readBody();
+      const intent = paymentService.submitMemberOfflineCashRequest({
+        obligationId: params.id,
+        payerUserId: currentUser.id,
+        notes: body.notes || ''
+      });
+      return json({ success: true, paymentIntent: intent });
+    }
+
+    if (method === 'GET' && pathname === '/api/host/pending-verifications') {
+      if (!currentUser) return error('Unauthorized', 401);
+      const verifications = paymentService.getPendingHostVerifications(currentUser.id);
+      return json({ success: true, verifications });
+    }
+
+    params = matchRoute('/api/host/verify-offline-cash/:id', pathname);
+    if (method === 'POST' && params) {
+      if (!currentUser) return error('Unauthorized', 401);
+      const result = paymentService.verifyAndClearOfflineCash({
+        intentId: params.id,
+        hostUserId: currentUser.id
+      });
+      return json(result);
     }
 
     params = matchRoute('/api/payments/webhooks/:provider', pathname);

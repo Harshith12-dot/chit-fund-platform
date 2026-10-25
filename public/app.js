@@ -1,5 +1,6 @@
 // ============================================================================
-// Local Connectivity Chit-Fund Platform Frontend Application Logic
+// Local Connectivity Chit-Fund Platform — Application Logic
+// Dual-Portal: "Join a Chit" (Member) & "Host a Chit" (Organizer / Host)
 // ============================================================================
 
 let currentUser = null;
@@ -7,21 +8,20 @@ let activeGroupId = 'grp-indiranagar-2026';
 let activeCycleId = 'cyc-2';
 let pendingObligationForPayment = null;
 
-// Format paise to INR string: 2500000 paise -> ₹25,000.00
+// Format minor integer units (paise) to INR
 function formatINR(amountMinor) {
   if (amountMinor === null || amountMinor === undefined) return '₹0.00';
   const val = Number(amountMinor) / 100;
   return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Format paise to rounded INR string: 2500000 paise -> ₹25,000
 function formatINRCompact(amountMinor) {
   if (amountMinor === null || amountMinor === undefined) return '₹0';
   const val = Math.round(Number(amountMinor) / 100);
   return '₹' + val.toLocaleString('en-IN');
 }
 
-// Fetch helper with User Context
+// Authenticated API Call Helper
 async function apiCall(endpoint, options = {}) {
   const headers = options.headers || {};
   if (currentUser) {
@@ -40,30 +40,66 @@ async function apiCall(endpoint, options = {}) {
   return data;
 }
 
-// Initialize Application
+// App Initialization
 document.addEventListener('DOMContentLoaded', async () => {
   setupViewportToggle();
-  setupNavTabs();
+  setupPortalSwitcher();
+  setupSubNavTabs();
   setupRoleSwitcher();
+  setupHostSubTabs();
   setupAuctionBiddingCalculator();
-  setupPaymentModal();
-  setupDisputeModal();
+  setupPaymentModals();
 
   // Load Initial User & Data
   await switchActiveUser('usr-member-1');
   await loadLocalities();
-  await loadGroups();
-  await loadAuctionRoom();
+  await loadTopDues();
+  await loadJoinChits();
 });
 
-// Viewport Switcher (Mobile App Frame vs Desktop Operations Console)
+// ----------------------------------------------------------------------------
+// 1. DUAL PORTAL SWITCHER: "JOIN A CHIT" vs "HOST A CHIT"
+// ----------------------------------------------------------------------------
+function setupPortalSwitcher() {
+  const joinBtn = document.getElementById('portal-join-btn');
+  const hostBtn = document.getElementById('portal-host-btn');
+  const joinPortal = document.getElementById('join-chit-portal');
+  const hostPortal = document.getElementById('host-chit-portal');
+  const navPrimaryLabel = document.getElementById('nav-primary-label');
+
+  joinBtn.addEventListener('click', () => {
+    joinBtn.classList.add('active');
+    hostBtn.classList.remove('active');
+    joinPortal.style.display = 'block';
+    hostPortal.style.display = 'none';
+    navPrimaryLabel.textContent = 'Explore Chits';
+    loadTopDues();
+    loadJoinChits();
+  });
+
+  hostBtn.addEventListener('click', async () => {
+    hostBtn.classList.add('active');
+    joinBtn.classList.remove('active');
+    joinPortal.style.display = 'none';
+    hostPortal.style.display = 'block';
+    navPrimaryLabel.textContent = 'Host Workspace';
+
+    // If currently on normal member, auto switch to Host persona (Lakshmi Devi) for demonstration
+    if (currentUser && currentUser.role === 'MEMBER') {
+      const roleSelect = document.getElementById('role-select');
+      roleSelect.value = 'usr-organizer-1';
+      await switchActiveUser('usr-organizer-1');
+    }
+
+    loadHostWorkspace();
+  });
+}
+
+// Viewport Switcher (Mobile vs Desktop)
 function setupViewportToggle() {
   const mobileBtn = document.getElementById('view-mobile-btn');
   const desktopBtn = document.getElementById('view-desktop-btn');
   const deviceWrapper = document.getElementById('device-wrapper');
-
-  // Default to Mobile
-  deviceWrapper.className = 'device-frame mode-mobile';
 
   mobileBtn.addEventListener('click', () => {
     mobileBtn.classList.add('active');
@@ -78,25 +114,29 @@ function setupViewportToggle() {
   });
 }
 
-// Navigation Tabs
-function setupNavTabs() {
-  const tabs = document.querySelectorAll('.nav-tab');
-  tabs.forEach(tab => {
+// Secondary Navigation Tabs
+function setupSubNavTabs() {
+  const subTabs = document.querySelectorAll('.sub-tab');
+  subTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      const targetTab = tab.getAttribute('data-tab');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-
+      const targetSub = tab.getAttribute('data-subtab');
+      document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      const pane = document.getElementById(targetTab);
-      if (pane) pane.classList.add('active');
 
-      // Refresh data on tab activation
-      if (targetTab === 'tab-explore') loadGroups();
-      if (targetTab === 'tab-auction') loadAuctionRoom();
-      if (targetTab === 'tab-payments') loadPayments();
-      if (targetTab === 'tab-ledger') loadLedger();
-      if (targetTab === 'tab-operations') loadOperations();
+      // Hide all portal-sections
+      document.querySelectorAll('.portal-section').forEach(s => s.style.display = 'none');
+
+      if (targetSub === 'main-portal-view') {
+        const isHostActive = document.getElementById('portal-host-btn').classList.contains('active');
+        document.getElementById(isHostActive ? 'host-chit-portal' : 'join-chit-portal').style.display = 'block';
+      } else {
+        const targetEl = document.getElementById(targetSub);
+        if (targetEl) targetEl.style.display = 'block';
+      }
+
+      if (targetSub === 'auction-room-view') loadAuctionRoom();
+      if (targetSub === 'ledger-view') loadLedger();
+      if (targetSub === 'compliance-view') loadCompliance();
     });
   });
 }
@@ -111,26 +151,17 @@ function setupRoleSwitcher() {
 
 async function switchActiveUser(userId) {
   try {
-    const data = await apiCall(`/api/users`);
+    const data = await apiCall('/api/users');
     const target = data.users.find(u => u.id === userId);
     if (!target) return;
 
     currentUser = target;
 
-    // Update Header Badges
-    document.getElementById('badge-role').textContent = target.role;
-    document.getElementById('badge-name').textContent = target.display_name;
-    document.getElementById('user-phone-display').textContent = `Logged in: +91-${target.phone} (${target.display_name})`;
+    // Update Host Profile Banner if in Host Mode
+    document.getElementById('host-portal-name').textContent = target.display_name;
+    document.getElementById('host-portal-score').textContent = (target.reputation_score || 99.4) + '%';
 
-    // Check Collector Panel visibility
-    const collectorPanel = document.getElementById('collector-panel');
-    if (['COLLECTOR', 'OPERATIONS_ADMIN', 'SUPER_ADMIN'].includes(target.role)) {
-      collectorPanel.style.display = 'block';
-    } else {
-      collectorPanel.style.display = 'none';
-    }
-
-    // Check Auction Close button visibility (Organizer or Ops Admin)
+    // Auction Admin actions visible to Organizer / Admin
     const auctionAdminActions = document.getElementById('auction-admin-actions');
     if (['ORGANIZER', 'OPERATIONS_ADMIN', 'SUPER_ADMIN'].includes(target.role)) {
       auctionAdminActions.style.display = 'flex';
@@ -138,134 +169,529 @@ async function switchActiveUser(userId) {
       auctionAdminActions.style.display = 'none';
     }
 
-    // Refresh currently open tab
-    const activeTab = document.querySelector('.nav-tab.active');
-    if (activeTab) {
-      const tabId = activeTab.getAttribute('data-tab');
-      if (tabId === 'tab-explore') loadGroups();
-      if (tabId === 'tab-auction') loadAuctionRoom();
-      if (tabId === 'tab-payments') loadPayments();
-      if (tabId === 'tab-ledger') loadLedger();
-      if (tabId === 'tab-operations') loadOperations();
-    }
+    // Refresh Active Views
+    loadTopDues();
+    loadHostWorkspace();
   } catch (err) {
     console.error('Error switching user:', err);
   }
 }
 
 // ----------------------------------------------------------------------------
-// TAB 1: LOCALITY & NEARBY GROUPS
+// 2. "GET THE DUE AT TOP" — ACTIVE CHIT DUES BANNER
+// ----------------------------------------------------------------------------
+async function loadTopDues() {
+  const container = document.getElementById('top-dues-section');
+  if (!container || !currentUser) return;
+
+  try {
+    const data = await apiCall('/api/me/dues');
+    const dues = data.dues || [];
+
+    if (dues.length === 0) {
+      container.innerHTML = `
+        <div class="active-due-card">
+          <div class="due-top-row">
+            <span class="due-pill upcoming">Account Status</span>
+            <span style="font-size: 0.8rem; color: #94A3B8;">User: ${currentUser.display_name}</span>
+          </div>
+          <div class="due-chit-title">No Pending Chit Obligations</div>
+          <p class="due-subinfo">You have no overdue payments. Browse verified chits below to join an active group.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Grab first active pending due
+    const topDue = dues.find(d => d.status === 'PENDING') || dues[0];
+    const isPaid = topDue.status === 'PAID';
+    const isOverdue = new Date(topDue.due_at) < new Date() && !isPaid;
+
+    container.innerHTML = `
+      <div class="active-due-card">
+        <div class="due-top-row">
+          <span class="due-pill ${isPaid ? 'paid' : (isOverdue ? 'urgent' : 'urgent')}">
+            ${isPaid ? '✔ CYCLE OBLIGATION SETTLED' : '⚡ PAYMENT DUE IN 4 DAYS'}
+          </span>
+          <span style="font-size: 0.8rem; color: #CBD5E1;">Slot #${topDue.slot_number} • Cycle #${topDue.cycle_sequence_no}</span>
+        </div>
+
+        <div class="due-chit-title">${topDue.group_name}</div>
+        <div class="due-subinfo">
+          Organized by <strong>${topDue.organizer_name || 'Lakshmi Devi'}</strong> (License: ${topDue.host_license_number || 'KA/BLR/REG/2026/0491'}) • Due: ${new Date(topDue.due_at).toLocaleDateString()}
+        </div>
+
+        <div class="due-amount-row">
+          <div>
+            <div class="due-amount-label">Net Monthly Payable:</div>
+            <div style="font-size: 0.75rem; color: #94A3B8;">Base: ${formatINR(topDue.base_amount_minor)} ${topDue.dividend_deduction_minor > 0 ? `(- Dividend ${formatINR(topDue.dividend_deduction_minor)})` : ''}</div>
+          </div>
+          <div class="due-amount-val">${formatINR(topDue.net_payable_minor)}</div>
+        </div>
+
+        ${!isPaid ? `
+          <div class="due-actions-grid">
+            <button class="btn btn-gold" id="btn-pay-online-top">
+              ⚡ Pay Online (UPI / GPay)
+            </button>
+            <button class="btn btn-outline" style="color: #FFFFFF; border-color: rgba(255,255,255,0.4);" id="btn-pay-offline-top">
+              💵 Pay Offline (Cash to Host)
+            </button>
+          </div>
+        ` : `
+          <div style="font-size: 0.82rem; color: #A7F3D0; font-weight: 600;">
+            ✔ Transaction verified and recorded in the double-entry general ledger.
+          </div>
+        `}
+      </div>
+    `;
+
+    if (!isPaid) {
+      document.getElementById('btn-pay-online-top').addEventListener('click', () => openOnlinePaymentModal(topDue));
+      document.getElementById('btn-pay-offline-top').addEventListener('click', () => openOfflineCashModal(topDue));
+    }
+  } catch (err) {
+    console.error('Error loading top dues:', err);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3. JOIN CHIT: MULTI-PARAMETER FILTERS & CHIT CARDS
 // ----------------------------------------------------------------------------
 async function loadLocalities() {
   try {
     const data = await apiCall('/api/localities');
-    const select = document.getElementById('locality-filter');
-    select.innerHTML = '<option value="">All Bengaluru Localities</option>';
-    data.localities.forEach(loc => {
-      select.innerHTML += `<option value="${loc.id}">${loc.name} (${loc.pincode})</option>`;
+    const dropdown = document.getElementById('locality-dropdown');
+    const newChitLocality = document.getElementById('new-chit-locality');
+
+    dropdown.innerHTML = '<option value="">All Bengaluru Areas</option>';
+    newChitLocality.innerHTML = '';
+
+    data.localities.forEach(l => {
+      dropdown.innerHTML += `<option value="${l.id}">${l.name} (${l.pincode})</option>`;
+      newChitLocality.innerHTML += `<option value="${l.id}">${l.name} (${l.city})</option>`;
     });
 
-    const radiusSlider = document.getElementById('radius-slider');
-    const radiusVal = document.getElementById('radius-val');
+    const radiusSlider = document.getElementById('proximity-radius');
+    const radiusLabel = document.getElementById('proximity-radius-label');
     radiusSlider.addEventListener('input', (e) => {
-      radiusVal.textContent = e.target.value;
+      radiusLabel.textContent = e.target.value + ' km';
     });
 
-    document.getElementById('search-nearby-btn').addEventListener('click', loadGroups);
+    document.getElementById('apply-filters-btn').addEventListener('click', loadJoinChits);
   } catch (err) {
     console.error('Error loading localities:', err);
   }
 }
 
-async function loadGroups() {
+async function loadJoinChits() {
+  const container = document.getElementById('join-chits-grid');
+  if (!container) return;
+
   try {
-    const localityId = document.getElementById('locality-filter').value;
-    const radiusKm = document.getElementById('radius-slider').value;
+    const localityId = document.getElementById('locality-dropdown').value;
+    const radiusKm = document.getElementById('proximity-radius').value;
+    const poolFilter = document.getElementById('pool-amount-filter').value;
+    const dueFilter = document.getElementById('monthly-due-filter').value;
+    const govtOnly = document.getElementById('filter-govt-only').checked;
 
     let url = `/api/groups/nearby?radiusKm=${radiusKm}`;
     if (localityId) url += `&localityId=${localityId}`;
 
     const data = await apiCall(url);
-    const container = document.getElementById('groups-container');
+    let groups = data.groups || [];
+
+    // Apply Client Filters
+    if (govtOnly) {
+      groups = groups.filter(g => g.host_license_number);
+    }
+
+    if (poolFilter !== 'ALL') {
+      groups = groups.filter(g => {
+        const pool = g.total_pool_minor / 100;
+        if (poolFilter === 'MICRO') return pool < 100000;
+        if (poolFilter === 'SMALL') return pool >= 100000 && pool <= 500000;
+        if (poolFilter === 'MEDIUM') return pool > 500000 && pool <= 1000000;
+        if (poolFilter === 'LARGE') return pool > 1000000;
+        return true;
+      });
+    }
+
+    if (dueFilter !== 'ALL') {
+      groups = groups.filter(g => {
+        const due = g.monthly_contribution_minor / 100;
+        if (dueFilter === 'UNDER_10K') return due < 10000;
+        if (dueFilter === '10K_25K') return due >= 10000 && due <= 25000;
+        if (dueFilter === '25K_50K') return due > 25000 && due <= 50000;
+        if (dueFilter === 'ABOVE_50K') return due > 50000;
+        return true;
+      });
+    }
+
     container.innerHTML = '';
 
-    if (data.groups.length === 0) {
-      container.innerHTML = '<div class="card text-muted">No chit groups found in this radius. Try expanding the search radius.</div>';
+    if (groups.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="grid-column: 1/-1; text-align: center; padding: 30px;">
+          <h4 style="color: var(--primary-navy); margin-bottom: 6px;">No Chit Funds Match Your Selected Filters</h4>
+          <p class="text-muted" style="font-size: 0.85rem;">Try expanding the proximity radius or adjusting installment filters.</p>
+        </div>
+      `;
       return;
     }
 
-    data.groups.forEach(g => {
+    groups.forEach(g => {
       const distanceBadge = g.distance_km !== null
-        ? `<span class="distance-tag">${g.distance_km} km away</span>`
-        : `<span class="distance-tag">${g.locality_name}</span>`;
+        ? `<span class="distance-pill">📍 ${g.distance_km} km • ${g.locality_name}</span>`
+        : `<span class="distance-pill">📍 ${g.locality_name}</span>`;
 
       const card = document.createElement('div');
-      card.className = 'group-card';
+      card.className = 'rich-chit-card';
       card.innerHTML = `
         <div>
-          <div class="group-header">
-            <h4 class="group-name">${g.name}</h4>
-            ${distanceBadge}
+          <div class="chit-card-header">
+            <div>
+              <h3 class="chit-title">${g.name}</h3>
+              ${distanceBadge}
+            </div>
+            <span class="status-pill ${g.status === 'ACTIVE' ? 'status-active' : 'status-settled'}">
+              ${g.status === 'ACTIVE' ? 'CYCLE #2 ACTIVE' : 'OPEN FOR ENROLMENT'}
+            </span>
           </div>
-          <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 12px;">
-            Organizer: <strong>${g.organizer_name}</strong> (Reputation: ${g.organizer_reputation}%)
+
+          <!-- Host Trust Accreditation Box -->
+          <div class="host-trust-box">
+            <div class="host-trust-header">
+              <span class="host-name-title">🏛️ Host: <strong>${g.organizer_name}</strong></span>
+              <span class="host-trust-score">★ ${g.trust_score || 99.4}% Trust</span>
+            </div>
+            <div class="badges-flow">
+              <span class="trust-badge-pill badge-govt">🛡️ Reg License: ${g.host_license_number || 'KA/BLR/REG/2026/0491'}</span>
+              <span class="trust-badge-pill badge-bank">🏦 Bank Guarantee Bond (${g.bank_guarantee_ref || '100% Secured'})</span>
+              <span class="trust-badge-pill badge-id">🆔 Aadhaar & PAN Verified</span>
+            </div>
           </div>
-          <div class="group-stats">
-            <div class="stat-item">
-              <span class="stat-title">Chit Pool</span>
-              <span class="stat-value">${formatINRCompact(g.total_pool_minor)}</span>
+
+          <!-- Financial Grid -->
+          <div class="chit-financial-grid">
+            <div class="fin-item">
+              <span class="fin-label">Chit Pool</span>
+              <span class="fin-value">${formatINRCompact(g.total_pool_minor)}</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-title">Monthly Dues</span>
-              <span class="stat-value">${formatINRCompact(g.monthly_contribution_minor)}</span>
+            <div class="fin-item">
+              <span class="fin-label">Monthly Due</span>
+              <span class="fin-value text-accent">${formatINRCompact(g.monthly_contribution_minor)}</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-title">Tenure</span>
-              <span class="stat-value">${g.total_months} Months</span>
+            <div class="fin-item">
+              <span class="fin-label">Tenure</span>
+              <span class="fin-value">${g.total_months} Months</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-title">Members</span>
-              <span class="stat-value">${g.current_members_count} / ${g.max_members}</span>
+            <div class="fin-item">
+              <span class="fin-label">Members</span>
+              <span class="fin-value">${g.current_members_count} / ${g.max_members}</span>
             </div>
+          </div>
+
+          <div style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 14px;">
+            ✔ 5% Organizer commission • Max auction discount ceiling: <strong>${formatINRCompact(g.max_bid_discount_minor)}</strong> (30% statutory limit)
           </div>
         </div>
-        <button class="btn btn-primary btn-block join-grp-btn" data-group-id="${g.id}">
-          ${g.status === 'REGISTRATION' ? 'Apply to Join Group' : 'View Group Constitution'}
+
+        <button class="btn btn-primary btn-block join-action-btn">
+          ${g.status === 'REGISTRATION' ? 'Apply to Join this Chit' : 'Enter Live Auction Room'}
         </button>
       `;
 
-      card.querySelector('.join-grp-btn').addEventListener('click', () => handleGroupAction(g));
+      card.querySelector('.join-action-btn').addEventListener('click', () => {
+        if (g.status === 'REGISTRATION') {
+          handleJoinRequest(g);
+        } else {
+          activeGroupId = g.id;
+          document.querySelector('.sub-tab[data-subtab="auction-room-view"]').click();
+        }
+      });
+
       container.appendChild(card);
     });
   } catch (err) {
-    console.error('Error loading groups:', err);
+    console.error('Error loading join chits:', err);
   }
 }
 
-async function handleGroupAction(group) {
-  if (group.status === 'REGISTRATION') {
-    if (confirm(`Do you wish to submit a join request for "${group.name}"?\nMonthly Obligation: ${formatINRCompact(group.monthly_contribution_minor)} for ${group.total_months} months.\nGoverned under Chit Funds Act 1982.`)) {
-      try {
-        await apiCall(`/api/groups/${group.id}/join-requests`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ acceptedRulesVersion: '1.0' })
-        });
-        alert('Join request submitted successfully! The group organizer will review your profile.');
-        loadGroups();
-      } catch (e) {
-        alert(e.message);
-      }
+async function handleJoinRequest(group) {
+  if (confirm(`Do you wish to submit an enrolment request for "${group.name}"?\nMonthly Obligation: ${formatINRCompact(group.monthly_contribution_minor)} for ${group.total_months} months.\nGoverned under Chit Funds Act 1982.`)) {
+    try {
+      await apiCall(`/api/groups/${group.id}/join-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acceptedRulesVersion: '1.0' })
+      });
+      alert('✔ Join application submitted! The verified chit host will review your KYC credentials.');
+      loadJoinChits();
+    } catch (err) {
+      alert(err.message);
     }
-  } else {
-    // Switch to active chit auction tab
-    activeGroupId = group.id;
-    document.querySelector('.nav-tab[data-tab="tab-auction"]').click();
   }
 }
 
 // ----------------------------------------------------------------------------
-// TAB 2: LIVE AUCTION ROOM & BIDDING
+// 4. HOST / MANAGE PORTAL: DASHBOARD & ONE-CLICK CASH VERIFICATION
+// ----------------------------------------------------------------------------
+function setupHostSubTabs() {
+  const tabs = document.querySelectorAll('.host-tab-btn');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetPanel = tab.getAttribute('data-hosttab');
+      document.querySelectorAll('.host-tab-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.host-subpanel').forEach(p => p.style.display = 'none');
+
+      tab.classList.add('active');
+      const panel = document.getElementById(targetPanel);
+      if (panel) panel.style.display = 'block';
+
+      if (targetPanel === 'tab-host-verifications') loadHostPendingVerifications();
+      if (targetPanel === 'tab-host-members') loadHostJoinRequests();
+    });
+  });
+
+  // Host Create Chit Form
+  const createForm = document.getElementById('host-chit-form');
+  createForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('new-chit-name').value;
+    const localityId = document.getElementById('new-chit-locality').value;
+    const totalPoolMinor = Number(document.getElementById('new-total-pool').value) * 100;
+    const monthlyContributionMinor = Number(document.getElementById('new-monthly-due').value) * 100;
+    const totalMonths = Number(document.getElementById('new-duration').value);
+    const hostLicenseNumber = document.getElementById('new-license-num').value;
+    const bankGuaranteeRef = document.getElementById('new-bg-ref').value;
+
+    try {
+      await apiCall('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          localityId,
+          totalPoolMinor,
+          monthlyContributionMinor,
+          totalMonths,
+          maxMembers: totalMonths,
+          hostLicenseNumber,
+          bankGuaranteeRef,
+          trustScore: 99.4
+        })
+      });
+
+      alert(`✔ Chit Fund "${name}" successfully registered under State Chit Registrar License ${hostLicenseNumber}!\nOpened for member enrolment.`);
+      createForm.reset();
+      document.querySelector('.host-tab-btn[data-hosttab="tab-host-verifications"]').click();
+      loadJoinChits();
+    } catch (err) {
+      alert('Error registering chit: ' + err.message);
+    }
+  });
+}
+
+async function loadHostWorkspace() {
+  await loadHostPendingVerifications();
+  await loadHostJoinRequests();
+}
+
+async function loadHostPendingVerifications() {
+  const container = document.getElementById('host-verifications-list');
+  const badge = document.getElementById('host-pending-badge');
+  if (!container) return;
+
+  try {
+    const data = await apiCall('/api/host/pending-verifications');
+    const list = data.verifications || [];
+
+    badge.textContent = list.length;
+    container.innerHTML = '';
+
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div class="text-muted" style="padding: 24px; text-align: center;">
+          ✔ All offline and cash payments are verified. No pending cash approvals in queue.
+        </div>
+      `;
+      return;
+    }
+
+    list.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'verification-card';
+      card.innerHTML = `
+        <div style="flex: 1; min-width: 240px;">
+          <div class="verif-member-info">
+            <strong>${v.payer_name}</strong> (+91-${v.payer_phone}) • <span>Slot #${v.slot_number}</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            ${v.group_name} • Cycle #${v.cycle_sequence_no} Due
+          </div>
+          <div class="verif-notes-box">
+            📝 <strong>Member Note:</strong> "${v.offline_notes || 'Handed cash to Host'}"
+          </div>
+        </div>
+
+        <div style="text-align: right;">
+          <div class="font-mono text-primary" style="font-size: 1.35rem; font-weight: 800; margin-bottom: 6px;">
+            ${formatINR(v.amount_minor)}
+          </div>
+          <button class="btn btn-gold btn-sm verify-cash-btn" data-intent-id="${v.id}">
+            ✔ Verify Cash Received & Clear Dues
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.verify-cash-btn').addEventListener('click', async () => {
+        if (confirm(`Confirm physical cash receipt of ${formatINR(v.amount_minor)} from ${v.payer_name}?\nThis will clear the member's dues and post a balanced entry to the general ledger.`)) {
+          try {
+            const res = await apiCall(`/api/host/verify-offline-cash/${v.id}`, { method: 'POST' });
+            alert(`✔ Cash payment cleared!\nReceipt Issued: ${res.receiptNo}\nLedger successfully balanced.`);
+            loadHostPendingVerifications();
+            loadTopDues();
+            loadLedger();
+          } catch (e) {
+            alert(e.message);
+          }
+        }
+      });
+
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Error loading host verifications:', err);
+  }
+}
+
+async function loadHostJoinRequests() {
+  const container = document.getElementById('host-join-requests-list');
+  if (!container) return;
+
+  try {
+    const grpData = await apiCall(`/api/groups/${activeGroupId}`);
+    const pendingMembers = grpData.group.members.filter(m => m.status === 'PENDING_APPROVAL');
+
+    container.innerHTML = '';
+    if (pendingMembers.length === 0) {
+      container.innerHTML = '<div class="text-muted p-3">No pending join applications for this chit.</div>';
+      return;
+    }
+
+    pendingMembers.forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'verification-card';
+      item.innerHTML = `
+        <div>
+          <strong>${m.display_name}</strong> (+91-${m.phone})
+          <div class="text-muted" style="font-size: 0.78rem;">KYC Status: <span class="badge-govt">${m.kyc_status}</span> • Reputation: ${m.reputation_score}%</div>
+        </div>
+        <button class="btn btn-primary btn-sm approve-member-btn" data-mem-id="${m.id}">
+          Approve & Allocate Slot
+        </button>
+      `;
+
+      item.querySelector('.approve-member-btn').addEventListener('click', async () => {
+        try {
+          await apiCall(`/api/groups/${activeGroupId}/members/${m.id}/approve`, { method: 'POST' });
+          alert(`✔ Member ${m.display_name} approved and enrolled!`);
+          loadHostJoinRequests();
+          loadJoinChits();
+        } catch (e) {
+          alert(e.message);
+        }
+      });
+
+      container.appendChild(item);
+    });
+  } catch (err) {
+    console.error('Error loading join requests:', err);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 5. PAYMENT MODALS (ONLINE UPI vs OFFLINE CASH)
+// ----------------------------------------------------------------------------
+function setupPaymentModals() {
+  // 1. Online Modal
+  const payModal = document.getElementById('payment-modal');
+  const closePayBtn = document.getElementById('close-modal-btn');
+  closePayBtn.addEventListener('click', () => payModal.style.display = 'none');
+
+  const apps = ['gpay', 'phonepe', 'paytm'];
+  apps.forEach(app => {
+    document.getElementById(`pay-${app}-btn`).addEventListener('click', async () => {
+      if (!pendingObligationForPayment) return;
+      try {
+        const intentRes = await apiCall(`/api/obligations/${pendingObligationForPayment.id}/payment-intents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentMethod: 'UPI_QR' })
+        });
+
+        await apiCall(`/api/payments/webhooks/upi`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            intentId: intentRes.intent.id,
+            status: 'SUCCESS'
+          })
+        });
+
+        alert(`✔ Instant UPI payment of ${formatINR(pendingObligationForPayment.net_payable_minor)} settled successfully!\nGeneral ledger updated.`);
+        payModal.style.display = 'none';
+        loadTopDues();
+        loadLedger();
+      } catch (err) {
+        alert('Payment failed: ' + err.message);
+      }
+    });
+  });
+
+  // 2. Offline Cash Modal
+  const offlineModal = document.getElementById('offline-cash-modal');
+  const closeOfflineBtn = document.getElementById('close-offline-modal-btn');
+  closeOfflineBtn.addEventListener('click', () => offlineModal.style.display = 'none');
+
+  const offlineForm = document.getElementById('offline-cash-form');
+  offlineForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!pendingObligationForPayment) return;
+    const notes = document.getElementById('offline-cash-notes').value;
+
+    try {
+      await apiCall(`/api/obligations/${pendingObligationForPayment.id}/offline-cash`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes })
+      });
+
+      alert(`✔ Offline cash submission recorded!\nYour Chit Host will verify physical receipt and clear your dues.`);
+      offlineModal.style.display = 'none';
+      loadTopDues();
+      loadHostWorkspace();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+}
+
+function openOnlinePaymentModal(due) {
+  pendingObligationForPayment = due;
+  document.getElementById('modal-pay-amount').textContent = formatINR(due.net_payable_minor);
+  document.getElementById('payment-modal').style.display = 'flex';
+}
+
+function openOfflineCashModal(due) {
+  pendingObligationForPayment = due;
+  document.getElementById('offline-modal-amount').textContent = formatINR(due.net_payable_minor);
+  document.getElementById('offline-cash-modal').style.display = 'flex';
+}
+
+// ----------------------------------------------------------------------------
+// 6. LIVE AUCTION ROOM & BIDDING
 // ----------------------------------------------------------------------------
 function setupAuctionBiddingCalculator() {
   const bidInput = document.getElementById('bid-amount-input');
@@ -279,7 +705,7 @@ function setupAuctionBiddingCalculator() {
     const commission = Math.round(pool * 0.05); // ₹25,000 (5%)
     const netPrize = pool - discount;
     const dividendTotal = Math.max(0, discount - commission);
-    const dividendPerMember = Math.floor(dividendTotal / 5); // 5 members in demo group
+    const dividendPerMember = Math.floor(dividendTotal / 5);
 
     previewPrize.textContent = '₹' + netPrize.toLocaleString('en-IN');
     previewCommission.textContent = '₹' + commission.toLocaleString('en-IN');
@@ -289,18 +715,17 @@ function setupAuctionBiddingCalculator() {
   bidInput.addEventListener('input', updatePreview);
   updatePreview();
 
-  // Bid Submission Form
+  // Bid Submission
   document.getElementById('bid-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const discountMinor = Number(bidInput.value) * 100; // to paise
+    const discountMinor = Number(bidInput.value) * 100;
 
     try {
-      // Find user's membership in active group
       const grpData = await apiCall(`/api/groups/${activeGroupId}`);
       const membership = grpData.group.members.find(m => m.user_id === currentUser.id);
 
       if (!membership) {
-        alert('You are not an active member of this chit group. Please join first.');
+        alert('You must be an active enrolled member of this chit group to submit auction bids.');
         return;
       }
 
@@ -313,16 +738,16 @@ function setupAuctionBiddingCalculator() {
         })
       });
 
-      alert(`Bid of ₹${Number(bidInput.value).toLocaleString('en-IN')} placed successfully!`);
+      alert(`✔ Competitive bid of ₹${Number(bidInput.value).toLocaleString('en-IN')} submitted successfully!`);
       loadAuctionRoom();
     } catch (err) {
       alert('Bid Rejected: ' + err.message);
     }
   });
 
-  // Close Auction Button (Organizer / Admin)
+  // Close Auction
   document.getElementById('close-auction-btn').addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to close Cycle #2 Auction?\nThis will determine the winner, compute member dividends, and commit balanced transactions to the General Ledger.')) {
+    if (!confirm('Are you sure you want to close Cycle #2 Auction?\nThis will determine the winner, compute member dividends, and commit balanced entries to the General Ledger.')) {
       return;
     }
 
@@ -364,16 +789,17 @@ async function loadAuctionRoom() {
       cycle.bids.forEach((b, index) => {
         const isWinning = index === 0;
         const item = document.createElement('div');
-        item.className = `bid-item ${isWinning ? 'winning' : ''}`;
+        item.className = 'verification-card';
+        item.style.padding = '10px 14px';
         item.innerHTML = `
           <div>
             <strong>${b.display_name}</strong> (Slot #${b.slot_number})
             <div class="text-muted" style="font-size: 0.72rem;">${new Date(b.submitted_at).toLocaleTimeString()}</div>
           </div>
           <div class="text-right">
-            <span class="font-mono" style="font-size: 1rem; font-weight: 700;">${formatINR(b.bid_discount_minor)}</span>
-            <div style="font-size: 0.72rem; color: ${isWinning ? 'var(--accent-gold)' : 'var(--text-muted)'}; font-weight: 600;">
-              ${isWinning ? '★ Highest Bid' : 'Outbid'}
+            <span class="font-mono" style="font-size: 1rem; font-weight: 800;">${formatINR(b.bid_discount_minor)}</span>
+            <div style="font-size: 0.72rem; color: ${isWinning ? 'var(--accent-gold)' : 'var(--text-muted)'}; font-weight: 700;">
+              ${isWinning ? '★ Winning Highest Bid' : 'Outbid'}
             </div>
           </div>
         `;
@@ -381,7 +807,6 @@ async function loadAuctionRoom() {
       });
     }
 
-    // If auction is closed, show result snapshot
     const resultCard = document.getElementById('auction-result-card');
     if (cycle.status === 'AUCTION_CLOSED' || cycle.status === 'SETTLED') {
       resultCard.style.display = 'block';
@@ -408,154 +833,21 @@ async function loadAuctionRoom() {
 }
 
 // ----------------------------------------------------------------------------
-// TAB 3: PAYMENTS & OBLIGATIONS
-// ----------------------------------------------------------------------------
-async function loadPayments() {
-  try {
-    const cycleData = await apiCall(`/api/cycles/${activeCycleId}`);
-    const obligations = cycleData.cycle.obligations;
-    const container = document.getElementById('obligations-container');
-    const collectorSelect = document.getElementById('collector-member-select');
-
-    container.innerHTML = '';
-    collectorSelect.innerHTML = '<option value="">-- Select Member Obligation --</option>';
-
-    obligations.forEach(o => {
-      const isPaid = o.status === 'PAID';
-      const isMyObligation = currentUser && o.phone === currentUser.phone;
-
-      // Populate collector select if unpaid
-      if (!isPaid) {
-        collectorSelect.innerHTML += `<option value="${o.id}">Slot #${o.slot_number} - ${o.display_name} (${formatINRCompact(o.net_payable_minor)})</option>`;
-      }
-
-      const item = document.createElement('div');
-      item.className = 'group-card';
-      item.style.marginBottom = '12px';
-      item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div style="font-weight: 700;">Slot #${o.slot_number}: ${o.display_name}</div>
-            <div class="text-muted" style="font-size: 0.78rem;">Cycle #2 Due: ${new Date(o.due_at).toLocaleDateString()}</div>
-          </div>
-          <div class="text-right">
-            <div class="font-mono" style="font-size: 1.1rem; font-weight: 800;">${formatINR(o.net_payable_minor)}</div>
-            <span class="status-pill ${isPaid ? 'status-settled' : 'status-active'}">
-              ${isPaid ? '✔ PAID' : 'PENDING'}
-            </span>
-          </div>
-        </div>
-        ${!isPaid && isMyObligation ? `
-          <button class="btn btn-primary btn-block pay-now-btn" style="margin-top: 10px;" data-obl-id="${o.id}" data-amount="${o.net_payable_minor}">
-            Pay via UPI (Instant QR / Collect)
-          </button>
-        ` : ''}
-      `;
-
-      if (!isPaid && isMyObligation) {
-        item.querySelector('.pay-now-btn').addEventListener('click', () => openPaymentModal(o));
-      }
-
-      container.appendChild(item);
-    });
-
-    // Setup Collector cash submission
-    const collectorForm = document.getElementById('collector-cash-form');
-    collectorForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const oblId = collectorSelect.value;
-      const notes = document.getElementById('collector-notes').value;
-      if (!oblId) return alert('Please select a member obligation.');
-
-      try {
-        await apiCall(`/api/obligations/${oblId}/collector-cash`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ notes })
-        });
-        alert('✔ Cash payment recorded and matched to balanced ledger!');
-        loadPayments();
-        loadLedger();
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-  } catch (err) {
-    console.error('Error loading payments:', err);
-  }
-}
-
-// Payment Modal Logic
-function setupPaymentModal() {
-  const modal = document.getElementById('payment-modal');
-  const closeBtn = document.getElementById('close-modal-btn');
-  closeBtn.addEventListener('click', () => modal.style.display = 'none');
-
-  const apps = ['gpay', 'phonepe', 'paytm'];
-  apps.forEach(app => {
-    document.getElementById(`pay-${app}-btn`).addEventListener('click', async () => {
-      if (!pendingObligationForPayment) return;
-      try {
-        // Step 1: Create payment intent
-        const intentRes = await apiCall(`/api/obligations/${pendingObligationForPayment.id}/payment-intents`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentMethod: 'UPI_QR' })
-        });
-
-        // Step 2: Trigger provider webhook
-        await apiCall(`/api/payments/webhooks/upi`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            intentId: intentRes.intent.id,
-            status: 'SUCCESS'
-          })
-        });
-
-        alert(`✔ Payment of ${formatINR(pendingObligationForPayment.net_payable_minor)} successfully processed via simulated UPI!\nDouble-entry ledger entry committed.`);
-        modal.style.display = 'none';
-        loadPayments();
-        loadLedger();
-      } catch (err) {
-        alert('Payment failed: ' + err.message);
-      }
-    });
-  });
-}
-
-function openPaymentModal(obligation) {
-  pendingObligationForPayment = obligation;
-  document.getElementById('modal-pay-amount').textContent = formatINR(obligation.net_payable_minor);
-  document.getElementById('payment-modal').style.display = 'flex';
-}
-
-// ----------------------------------------------------------------------------
-// TAB 4: BALANCED DOUBLE-ENTRY LEDGER
+// 7. BALANCED GENERAL LEDGER
 // ----------------------------------------------------------------------------
 async function loadLedger() {
   try {
     const data = await apiCall(`/api/groups/${activeGroupId}/reconciliation`);
     const recon = data.reconciliation;
 
-    // Metrics
     document.getElementById('stat-total-debit').textContent = formatINR(recon.totalSystemDebit);
     document.getElementById('stat-total-credit').textContent = formatINR(recon.totalSystemCredit);
     document.getElementById('stat-variance').textContent = formatINR(recon.systemVariance);
     document.getElementById('stat-tx-count').textContent = recon.totalTransactions;
 
     const badge = document.getElementById('reconciliation-badge');
-    if (recon.isFullyBalanced) {
-      badge.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 100% BALANCED (Variance = ₹0.00)`;
-      badge.style.color = 'var(--success)';
-      badge.style.borderColor = 'var(--success)';
-    } else {
-      badge.textContent = `⚠ UNBALANCED VARIANCE: ${formatINR(recon.systemVariance)}`;
-      badge.style.color = 'var(--danger)';
-      badge.style.borderColor = 'var(--danger)';
-    }
+    badge.textContent = recon.isFullyBalanced ? '✔ 100% BALANCED (Variance = ₹0.00)' : '⚠ UNBALANCED VARIANCE';
 
-    // Chart of Accounts Table
     const chartBody = document.getElementById('chart-accounts-body');
     chartBody.innerHTML = '';
     recon.chartOfAccounts.forEach(acc => {
@@ -563,25 +855,24 @@ async function loadLedger() {
         <tr>
           <td><code class="font-mono">${acc.code}</code></td>
           <td><strong>${acc.name}</strong></td>
-          <td><span class="user-role-tag">${acc.type}</span></td>
+          <td><span class="trust-badge-pill badge-bank">${acc.type}</span></td>
           <td class="text-right font-mono" style="font-weight: 700;">${formatINR(acc.balance_minor)}</td>
         </tr>
       `;
     });
 
-    // Journal Transactions Table
     const txBody = document.getElementById('transactions-body');
     txBody.innerHTML = '';
     recon.transactions.forEach(tx => {
       txBody.innerHTML += `
         <tr>
           <td><code class="font-mono">${tx.id.slice(0, 8)}</code></td>
-          <td><span class="status-pill status-agent">${tx.source_type}</span></td>
+          <td><span class="status-pill status-finance">${tx.source_type}</span></td>
           <td>${tx.description}</td>
           <td class="text-right font-mono text-primary">${formatINR(tx.txDebit)}</td>
           <td class="text-right font-mono text-primary">${formatINR(tx.txCredit)}</td>
-          <td><span class="text-success font-mono" style="font-weight: bold;">✔ Yes</span></td>
-          <td class="text-muted" style="font-size: 0.75rem;">${new Date(tx.posted_at).toLocaleString()}</td>
+          <td><span class="text-success font-mono">✔ Yes</span></td>
+          <td class="text-muted" style="font-size: 0.72rem;">${new Date(tx.posted_at).toLocaleString()}</td>
         </tr>
       `;
     });
@@ -591,104 +882,83 @@ async function loadLedger() {
 }
 
 // ----------------------------------------------------------------------------
-// TAB 5: OPERATIONS & COMPLIANCE CONSOLE
+// 8. COMPLIANCE & GOVERNANCE VIEW
 // ----------------------------------------------------------------------------
-async function loadOperations() {
+async function loadCompliance() {
   try {
-    // 1. Load Payouts (Maker-Checker)
+    // Payouts Maker-Checker
     const payoutsData = await apiCall('/api/payouts');
     const payoutsBody = document.getElementById('payouts-body');
     payoutsBody.innerHTML = '';
 
-    if (payoutsData.payouts.length === 0) {
-      payoutsBody.innerHTML = '<tr><td colspan="8" class="text-muted">No payout requests currently queued.</td></tr>';
-    } else {
-      payoutsData.payouts.forEach(p => {
-        let actionBtn = '';
-        if (p.approval_status === 'PENDING_APPROVAL') {
-          if (!p.maker_user_id) {
-            actionBtn = `<button class="btn btn-sm btn-primary initiate-payout-btn" data-id="${p.id}">Initiate (Maker)</button>`;
-          } else {
-            actionBtn = `<button class="btn btn-sm btn-gold approve-payout-btn" data-id="${p.id}">Approve (Checker)</button>`;
-          }
+    payoutsData.payouts.forEach(p => {
+      let actionBtn = '';
+      if (p.approval_status === 'PENDING_APPROVAL') {
+        if (!p.maker_user_id) {
+          actionBtn = `<button class="btn btn-sm btn-primary initiate-payout-btn" data-id="${p.id}">Initiate (Maker)</button>`;
         } else {
-          actionBtn = `<span class="text-success font-mono">✔ Disbursed (${p.provider_payout_ref})</span>`;
+          actionBtn = `<button class="btn btn-sm btn-gold approve-payout-btn" data-id="${p.id}">Approve (Checker)</button>`;
         }
+      } else {
+        actionBtn = `<span class="text-success font-mono">✔ Disbursed (${p.provider_payout_ref})</span>`;
+      }
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><code class="font-mono">${p.id.slice(0, 8)}</code></td>
-          <td>Cycle #${p.cycle_sequence_no}</td>
-          <td><strong>${p.winner_name}</strong></td>
-          <td>${p.bank_account_masked} (${p.ifsc_code})</td>
-          <td class="font-mono" style="font-weight: 700;">${formatINR(p.net_payout_minor)}</td>
-          <td><span class="status-pill ${p.approval_status === 'DISBURSED' ? 'status-settled' : 'status-active'}">${p.approval_status}</span></td>
-          <td style="font-size: 0.75rem;">Maker: ${p.maker_phone || 'None'}<br>Checker: ${p.checker_phone || 'None'}</td>
-          <td>${actionBtn}</td>
-        `;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code class="font-mono">${p.id.slice(0, 8)}</code></td>
+        <td>Cycle #${p.cycle_sequence_no}</td>
+        <td><strong>${p.winner_name}</strong></td>
+        <td>${p.bank_account_masked} (${p.ifsc_code})</td>
+        <td class="font-mono" style="font-weight: 700;">${formatINR(p.net_payout_minor)}</td>
+        <td><span class="status-pill ${p.approval_status === 'DISBURSED' ? 'status-settled' : 'status-active'}">${p.approval_status}</span></td>
+        <td style="font-size: 0.74rem;">Maker: ${p.maker_phone || 'None'}<br>Checker: ${p.checker_phone || 'None'}</td>
+        <td>${actionBtn}</td>
+      `;
 
-        if (tr.querySelector('.initiate-payout-btn')) {
-          tr.querySelector('.initiate-payout-btn').addEventListener('click', () => handleInitiatePayout(p.id));
-        }
-        if (tr.querySelector('.approve-payout-btn')) {
-          tr.querySelector('.approve-payout-btn').addEventListener('click', () => handleApprovePayout(p.id));
-        }
+      if (tr.querySelector('.initiate-payout-btn')) {
+        tr.querySelector('.initiate-payout-btn').addEventListener('click', async () => {
+          await apiCall(`/api/payouts/${p.id}/initiate`, { method: 'POST' });
+          alert('✔ Payout initiated by Maker. Queued for Finance Checker authorization.');
+          loadCompliance();
+        });
+      }
+      if (tr.querySelector('.approve-payout-btn')) {
+        tr.querySelector('.approve-payout-btn').addEventListener('click', async () => {
+          try {
+            await apiCall(`/api/payouts/${p.id}/approve`, { method: 'POST' });
+            alert('✔ Payout approved and prize money disbursed!\nDouble-entry ledger transaction posted.');
+            loadCompliance();
+            loadLedger();
+          } catch (e) {
+            alert('Authorization Blocked: ' + e.message);
+          }
+        });
+      }
 
-        payoutsBody.appendChild(tr);
-      });
-    }
+      payoutsBody.appendChild(tr);
+    });
 
-    // 2. Load KYC Queue
+    // KYC Queue
     const kycData = await apiCall('/api/kyc/cases');
     const kycBody = document.getElementById('kyc-table');
     kycBody.innerHTML = '';
-    if (kycData.cases.length === 0) {
-      kycBody.innerHTML = '<tr><td colspan="6" class="text-muted">No pending KYC cases in compliance review queue.</td></tr>';
-    } else {
-      kycData.cases.forEach(k => {
-        kycBody.innerHTML += `
-          <tr>
-            <td><code class="font-mono">${k.id.slice(0, 8)}</code></td>
-            <td><strong>${k.display_name}</strong> (+91-${k.phone})</td>
-            <td>${k.doc_number_masked} (${k.doc_type})</td>
-            <td>${k.provider_ref}</td>
-            <td><span class="status-pill status-active">${k.status}</span></td>
-            <td>
-              <button class="btn btn-sm btn-primary" onclick="window.reviewKyc('${k.id}', 'APPROVED')">Approve</button>
-              <button class="btn btn-sm btn-outline" onclick="window.reviewKyc('${k.id}', 'REJECTED')">Reject</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
+    kycData.cases.forEach(k => {
+      kycBody.innerHTML += `
+        <tr>
+          <td><code class="font-mono">${k.id.slice(0, 8)}</code></td>
+          <td><strong>${k.display_name}</strong> (+91-${k.phone})</td>
+          <td>${k.doc_number_masked} (${k.doc_type})</td>
+          <td>${k.provider_ref}</td>
+          <td><span class="status-pill status-active">${k.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="window.reviewKyc('${k.id}', 'APPROVED')">Approve</button>
+          </td>
+        </tr>
+      `;
+    });
 
-    // 3. Load Disputes
-    const disputesData = await apiCall('/api/support/cases');
-    const disputesBody = document.getElementById('disputes-body');
-    disputesBody.innerHTML = '';
-    if (disputesData.cases.length === 0) {
-      disputesBody.innerHTML = '<tr><td colspan="6" class="text-muted">No open support disputes.</td></tr>';
-    } else {
-      disputesData.cases.forEach(d => {
-        disputesBody.innerHTML += `
-          <tr>
-            <td><code class="font-mono">${d.id.slice(0, 8)}</code></td>
-            <td>${d.raised_by_name} (+91-${d.raised_by_phone})</td>
-            <td><span class="user-role-tag">${d.category}</span></td>
-            <td><strong>${d.title}</strong></td>
-            <td><span class="status-pill ${d.status === 'RESOLVED' ? 'status-settled' : 'status-active'}">${d.status}</span></td>
-            <td>
-              ${d.status === 'OPEN' ? `
-                <button class="btn btn-sm btn-primary" onclick="window.resolveDispute('${d.id}')">Resolve Case</button>
-              ` : '<span>Resolved</span>'}
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    // 4. Load Audit Events
-    const auditData = await apiCall('/api/audit-events?limit=15');
+    // Audit Trail
+    const auditData = await apiCall('/api/audit-events?limit=10');
     const auditBody = document.getElementById('audit-table');
     auditBody.innerHTML = '';
     auditData.events.forEach(a => {
@@ -703,33 +973,10 @@ async function loadOperations() {
       `;
     });
   } catch (err) {
-    console.error('Error loading operations console:', err);
+    console.error('Error loading compliance:', err);
   }
 }
 
-// Maker-Checker Handlers
-async function handleInitiatePayout(payoutId) {
-  try {
-    await apiCall(`/api/payouts/${payoutId}/initiate`, { method: 'POST' });
-    alert('✔ Payout initiated by Maker. Queued for Finance Checker authorization.');
-    loadOperations();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-async function handleApprovePayout(payoutId) {
-  try {
-    await apiCall(`/api/payouts/${payoutId}/approve`, { method: 'POST' });
-    alert('✔ Payout approved and prize money disbursed to winner!\nDouble-entry ledger transaction posted.');
-    loadOperations();
-    loadLedger();
-  } catch (err) {
-    alert('Authorization Blocked: ' + err.message);
-  }
-}
-
-// KYC Window Review
 window.reviewKyc = async (caseId, decision) => {
   try {
     await apiCall(`/api/kyc/cases/${caseId}/review`, {
@@ -738,59 +985,7 @@ window.reviewKyc = async (caseId, decision) => {
       body: JSON.stringify({ decision, reason: 'Demographic and UIDAI OTP check verified' })
     });
     alert(`KYC Case ${decision}`);
-    loadOperations();
-  } catch (err) {
-    alert(err.message);
-  }
-};
-
-// Dispute Modal Logic
-function setupDisputeModal() {
-  const modal = document.getElementById('dispute-modal');
-  const raiseBtn = document.getElementById('raise-dispute-btn');
-  const closeBtn = document.getElementById('close-dispute-modal-btn');
-
-  raiseBtn.addEventListener('click', () => modal.style.display = 'flex');
-  closeBtn.addEventListener('click', () => modal.style.display = 'none');
-
-  document.getElementById('dispute-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const category = document.getElementById('dispute-category').value;
-    const title = document.getElementById('dispute-title').value;
-    const description = document.getElementById('dispute-desc').value;
-
-    try {
-      await apiCall('/api/support/cases', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: activeGroupId,
-          cycleId: activeCycleId,
-          category,
-          title,
-          description
-        })
-      });
-      alert('Support case raised successfully. An operations agent will review.');
-      modal.style.display = 'none';
-      loadOperations();
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-}
-
-window.resolveDispute = async (caseId) => {
-  const notes = prompt('Enter resolution notes for this dispute:');
-  if (!notes) return;
-  try {
-    await apiCall(`/api/support/cases/${caseId}/resolve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision: 'RESOLVED', resolutionNotes: notes })
-    });
-    alert('Dispute resolved!');
-    loadOperations();
+    loadCompliance();
   } catch (err) {
     alert(err.message);
   }

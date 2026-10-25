@@ -211,3 +211,158 @@ export function recordCollectorCashPayment({
     status: 'SUCCESS'
   }, database);
 }
+
+export function submitMemberOfflineCashRequest({ obligationId, payerUserId, notes = '' }, db = null) {
+  const database = db || getDatabase();
+  const obligation = database.prepare('SELECT * FROM contribution_obligations WHERE id = ?').get(obligationId);
+  if (!obligation) throw new Error('Contribution obligation not found.');
+
+  if (obligation.status === 'PAID') {
+    throw new Error('This obligation has already been paid in full.');
+  }
+
+  const intentId = 'pi-offline-' + randomUUID();
+  const key = 'IDEMP-OFFLINE-' + randomUUID();
+  const now = new Date().toISOString();
+  const amountMinor = obligation.net_payable_minor - obligation.amount_paid_minor;
+
+  database.prepare(`
+    INSERT INTO payment_intents (
+      id, obligation_id, payer_user_id, amount_minor, payment_method,
+      collector_id, verified_by_host_id, offline_notes, provider_ref, idempotency_key, status, created_at
+    ) VALUES (?, ?, ?, ?, 'OFFLINE_DIRECT_HOST', NULL, NULL, ?, NULL, ?, 'PENDING_HOST_VERIFICATION', ?)
+  `).run(
+    intentId,
+    obligationId,
+    payerUserId,
+    amountMinor,
+    notes,
+    key,
+    now
+  );
+
+  const intent = database.prepare('SELECT * FROM payment_intents WHERE id = ?').get(intentId);
+
+  logAuditEvent({
+    actorId: payerUserId,
+    action: 'OFFLINE_PAYMENT_SUBMITTED_FOR_VERIFICATION',
+    objectType: 'payment_intents',
+    objectId: intentId,
+    metadata: { obligationId, amountMinor, notes },
+    db: database
+  });
+
+  return intent;
+}
+
+export function getPendingHostVerifications(hostUserId = null, db = null) {
+  const database = db || getDatabase();
+  let query = `
+    SELECT pi.*, o.cycle_id, o.net_payable_minor,
+           c.sequence_no as cycle_sequence_no,
+           g.id as group_id, g.name as group_name, g.organizer_id,
+           u.phone as payer_phone, prof.display_name as payer_name,
+           m.slot_number
+    FROM payment_intents pi
+    JOIN contribution_obligations o ON pi.obligation_id = o.id
+    JOIN chit_cycles c ON o.cycle_id = c.id
+    JOIN chit_groups g ON c.group_id = g.id
+    JOIN group_memberships m ON o.membership_id = m.id
+    JOIN users u ON pi.payer_user_id = u.id
+    JOIN user_profiles prof ON u.id = prof.user_id
+    WHERE pi.status = 'PENDING_HOST_VERIFICATION'
+  `;
+
+  const params = [];
+  if (hostUserId) {
+    query += ` AND (g.organizer_id = ? OR EXISTS (SELECT 1 FROM users WHERE id = ? AND role IN ('OPERATIONS_ADMIN', 'SUPER_ADMIN')))`;
+    params.push(hostUserId, hostUserId);
+  }
+
+  query += ` ORDER BY pi.created_at ASC`;
+  return database.prepare(query).all(...params);
+}
+
+export function verifyAndClearOfflineCash({ intentId, hostUserId }, db = null) {
+  const database = db || getDatabase();
+  const intent = database.prepare('SELECT * FROM payment_intents WHERE id = ?').get(intentId);
+  if (!intent) throw new Error('Payment intent not found.');
+
+  if (intent.status === 'SUCCESS') {
+    throw new Error('This payment has already been verified and settled.');
+  }
+
+  const obligation = database.prepare('SELECT * FROM contribution_obligations WHERE id = ?').get(intent.obligation_id);
+  const cycle = database.prepare('SELECT * FROM chit_cycles WHERE id = ?').get(obligation.cycle_id);
+  const group = database.prepare('SELECT * FROM chit_groups WHERE id = ?').get(cycle.group_id);
+  const membership = database.prepare('SELECT * FROM group_memberships WHERE id = ?').get(obligation.membership_id);
+
+  // Validate Host authority
+  const host = database.prepare('SELECT * FROM users WHERE id = ?').get(hostUserId);
+  if (!host || (host.id !== group.organizer_id && !['OPERATIONS_ADMIN', 'SUPER_ADMIN'].includes(host.role))) {
+    throw new Error('Only the designated Chit Host or Operations Admin can verify and mark this offline payment as completed.');
+  }
+
+  const now = new Date().toISOString();
+  const receiptNo = 'CASH-RCPT-' + Math.floor(100000 + Math.random() * 900000);
+
+  // Update intent
+  database.prepare(`
+    UPDATE payment_intents
+    SET status = 'SUCCESS',
+        verified_by_host_id = ?,
+        provider_ref = ?,
+        settled_at = ?
+    WHERE id = ?
+  `).run(hostUserId, receiptNo, now, intentId);
+
+  // Update obligation
+  const newAmountPaid = obligation.amount_paid_minor + intent.amount_minor;
+  database.prepare(`
+    UPDATE contribution_obligations
+    SET amount_paid_minor = ?,
+        status = 'PAID',
+        paid_at = ?
+    WHERE id = ?
+  `).run(newAmountPaid, now, obligation.id);
+
+  // Post Balanced Double-Entry Transaction to General Ledger
+  postBalancedTransaction({
+    groupId: group.id,
+    cycleId: cycle.id,
+    sourceType: 'CONTRIBUTION_PAYMENT',
+    sourceId: intent.id,
+    description: `Verified offline cash payment for Cycle #${cycle.sequence_no} by Slot #${membership.slot_number} (Confirmed by Host: ${host.phone})`,
+    entries: [
+      { accountId: 'acc-1001', entryType: 'DEBIT', amountMinor: intent.amount_minor },
+      { accountId: 'acc-1002', entryType: 'CREDIT', amountMinor: intent.amount_minor, membershipId: membership.id }
+    ],
+    postedBy: hostUserId
+  }, database);
+
+  // Resolve any existing delinquency
+  database.prepare(`
+    UPDATE delinquencies
+    SET status = 'RESOLVED', resolved_at = ?
+    WHERE obligation_id = ? AND status != 'RESOLVED'
+  `).run(now, obligation.id);
+
+  const updatedIntent = database.prepare('SELECT * FROM payment_intents WHERE id = ?').get(intentId);
+
+  logAuditEvent({
+    actorId: hostUserId,
+    action: 'OFFLINE_PAYMENT_VERIFIED_AND_CLEARED_BY_HOST',
+    objectType: 'payment_intents',
+    objectId: intentId,
+    afterState: updatedIntent,
+    metadata: { receiptNo, amountMinor: intent.amount_minor, membershipId: membership.id },
+    db: database
+  });
+
+  return {
+    success: true,
+    message: 'Offline cash payment verified and cleared successfully. Digital receipt issued and ledger balanced.',
+    receiptNo,
+    paymentIntent: updatedIntent
+  };
+}

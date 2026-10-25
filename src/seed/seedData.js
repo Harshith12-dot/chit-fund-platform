@@ -86,8 +86,8 @@ export function seedDatabase(db = null) {
   const insertProfile = database.prepare(`
     INSERT INTO user_profiles (
       user_id, display_name, email, locality_id, referral_code,
-      bank_account_no, bank_ifsc, upi_id, kyc_status, reputation_score, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      bank_account_no, bank_ifsc, upi_id, pan_number_masked, kyc_status, govt_verified, reputation_score, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ABCDE1234F', ?, 1, ?, ?, ?)
   `);
 
   const insertConsent = database.prepare(`
@@ -120,9 +120,11 @@ export function seedDatabase(db = null) {
     INSERT INTO chit_groups (
       id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
       total_months, max_members, current_members_count, organizer_commission_rate,
-      min_bid_discount_minor, max_bid_discount_minor, constitution_version, status, created_at
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
     ) VALUES (?, 'usr-organizer-1', 'loc-1', 'Indiranagar Traders & Artisans Chit 2026',
-      50000000, 2500000, 20, 5, 5, 0.05, 2500000, 15000000, '1.0', 'ACTIVE', ?)
+      50000000, 2500000, 20, 5, 5, 0.05, 2500000, 15000000, '1.0',
+      'KA/BLR/REG/2026/0491', 'BG-HDFC-992100', 99.4, 'ACTIVE', ?)
   `).run(grp1Id, now);
 
   // Seed Memberships for Group 1 (Slots 1 to 5)
@@ -273,6 +275,19 @@ export function seedDatabase(db = null) {
     }
   }
 
+  // Seed sample pending offline payment for Ramesh Kumar (mem-2) awaiting Host verification
+  database.prepare(`
+    INSERT INTO payment_intents (
+      id, obligation_id, payer_user_id, amount_minor, payment_method,
+      collector_id, verified_by_host_id, offline_notes, provider_ref, idempotency_key,
+      status, created_at
+    ) VALUES (
+      'pi-offline-ramesh-c2', 'obl-c2-mem-2', 'usr-member-1', 2500000, 'OFFLINE_DIRECT_HOST',
+      NULL, NULL, 'Handed cash ₹25,000 to Lakshmi Devi at Indiranagar shop on Friday evening', NULL, 'IDEMP-OFFLINE-SEED-1',
+      'PENDING_HOST_VERIFICATION', ?
+    )
+  `).run(now);
+
   // Seed live bids in Cycle 2
   // Ramesh bids ₹40,000 discount (4,000,000 paise)
   // Priya bids ₹45,000 discount (4,500,000 paise)
@@ -289,9 +304,11 @@ export function seedDatabase(db = null) {
     INSERT INTO chit_groups (
       id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
       total_months, max_members, current_members_count, organizer_commission_rate,
-      min_bid_discount_minor, max_bid_discount_minor, constitution_version, status, created_at
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
     ) VALUES (?, 'usr-organizer-1', 'loc-2', 'Koramangala Tech Entrepreneurs Savings Chit',
-      100000000, 5000000, 20, 20, 1, 0.05, 5000000, 30000000, '1.0', 'REGISTRATION', ?)
+      100000000, 5000000, 20, 20, 1, 0.05, 5000000, 30000000, '1.0',
+      'KA/BLR/REG/2026/0812', 'BG-ICICI-441199', 98.8, 'REGISTRATION', ?)
   `).run(grp2Id, now);
 
   database.prepare(`

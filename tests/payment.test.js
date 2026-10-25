@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import { resetDatabaseForTest } from '../src/db/index.js';
-import { createPaymentIntent, processPaymentWebhook, recordCollectorCashPayment } from '../src/services/paymentService.js';
+import { createPaymentIntent, processPaymentWebhook, recordCollectorCashPayment, submitMemberOfflineCashRequest, getPendingHostVerifications, verifyAndClearOfflineCash } from '../src/services/paymentService.js';
 import { getGroupReconciliation } from '../src/services/ledgerService.js';
 
 test('Payment Gateway, Webhooks & Idempotency', async (t) => {
@@ -129,6 +129,73 @@ test('Payment Gateway, Webhooks & Idempotency', async (t) => {
     const recon = getGroupReconciliation('grp-pay', db);
     assert.strictEqual(recon.totalTransactions, 2);
     assert.strictEqual(recon.totalSystemDebit, 5000000);
+    assert.strictEqual(recon.isFullyBalanced, true);
+  });
+
+  await t.test('Host Offline Cash Verification: Member submits cash -> Host verifies & clears dues', () => {
+    // Add third member and obligation
+    db.prepare(`
+      INSERT INTO users (id, phone, role, status, created_at)
+      VALUES ('u-payer-3', '9444444444', 'MEMBER', 'ACTIVE', ?)
+    `).run(now);
+
+    db.prepare(`
+      INSERT INTO user_profiles (user_id, display_name, created_at, updated_at)
+      VALUES ('u-payer-3', 'Test Payer 3', ?, ?)
+    `).run(now, now);
+
+    db.prepare(`
+      INSERT INTO group_memberships (id, group_id, user_id, slot_number, role, status, has_won_auction, accepted_rules_version, joined_at)
+      VALUES ('m-pay-3', 'grp-pay', 'u-payer-3', 3, 'MEMBER', 'ACTIVE', 0, '1.0', ?)
+    `).run(now);
+
+    db.prepare(`
+      INSERT INTO contribution_obligations (
+        id, cycle_id, membership_id, base_amount_minor, dividend_deduction_minor,
+        penalty_minor, net_payable_minor, amount_paid_minor, due_at, status
+      ) VALUES ('obl-pay-3', 'cyc-pay', 'm-pay-3', 2500000, 0, 0, 2500000, 0, ?, 'PENDING')
+    `).run(now);
+
+    // 1. Member submits cash payment request
+    const offlineReq = submitMemberOfflineCashRequest({
+      obligationId: 'obl-pay-3',
+      payerUserId: 'u-payer-3',
+      notes: 'Handed cash ₹25,000 at Indiranagar shop'
+    }, db);
+
+    assert.strictEqual(offlineReq.status, 'PENDING_HOST_VERIFICATION');
+
+    // 2. Host queries pending verifications queue
+    const pendingList = getPendingHostVerifications('u-payer', db); // u-payer is organizer of grp-pay
+    assert.ok(pendingList.some(p => p.id === offlineReq.id));
+
+    // 3. Unauthorized user cannot verify
+    assert.throws(() => {
+      verifyAndClearOfflineCash({
+        intentId: offlineReq.id,
+        hostUserId: 'u-payer-3' // Regular member, not host!
+      }, db);
+    }, /Only the designated Chit Host or Operations Admin can verify/);
+
+    // 4. Authorized Host verifies and clears dues
+    const clearResult = verifyAndClearOfflineCash({
+      intentId: offlineReq.id,
+      hostUserId: 'u-payer' // Host of grp-pay
+    }, db);
+
+    assert.strictEqual(clearResult.success, true);
+    assert.strictEqual(clearResult.paymentIntent.status, 'SUCCESS');
+    assert.ok(clearResult.receiptNo.startsWith('CASH-RCPT-'));
+
+    // Obligation is now PAID
+    const updatedObl = db.prepare('SELECT * FROM contribution_obligations WHERE id = ?').get('obl-pay-3');
+    assert.strictEqual(updatedObl.status, 'PAID');
+    assert.strictEqual(updatedObl.amount_paid_minor, 2500000);
+
+    // Ledger balances with all 3 transactions
+    const recon = getGroupReconciliation('grp-pay', db);
+    assert.strictEqual(recon.totalTransactions, 3);
+    assert.strictEqual(recon.totalSystemDebit, 7500000);
     assert.strictEqual(recon.isFullyBalanced, true);
   });
 });
