@@ -1,0 +1,26 @@
+{
+  "name": "local-chit-fund-platform",
+  "version": "1.0.0",
+  "description": "Mobile-first, locally anchored chit-fund management platform with double-entry balanced ledger, live auctions, and role-based operations.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/seed/seedData.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "chit-fund",
+    "fintech",
+    "double-entry-ledger",
+    "auction-engine",
+    "local-connectivity",
+    "financial-inclusion"
+  ],
+  "author": "Antigravity Engineering Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
