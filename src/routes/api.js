@@ -243,6 +243,41 @@ export async function handleApiRequest(req, res) {
       return json({ success: true, group }, 201);
     }
 
+    if (method === 'GET' && pathname === '/api/host/overview') {
+      if (!currentUser) return error('Unauthorized', 401);
+      const overview = groupService.getHostOverview(currentUser.id);
+      return json({ success: true, ...overview });
+    }
+
+    if (method === 'GET' && pathname === '/api/governance/summary') {
+      const { getDatabase } = await import('../db/index.js');
+      const db = getDatabase();
+      const groupsCount = db.prepare('SELECT COUNT(*) as count FROM chit_groups').get().count;
+      const totalPoolRow = db.prepare('SELECT SUM(total_pool_minor) as total_pool FROM chit_groups').get();
+      const verifiedKycCount = db.prepare("SELECT COUNT(*) as count FROM user_profiles WHERE kyc_status = 'VERIFIED'").get().count;
+      const approvedSureties = db.prepare("SELECT COUNT(*) as count FROM sureties WHERE status = 'APPROVED'").get().count;
+      const reconciliation = ledgerService.getGroupReconciliation('grp-indiranagar-2026');
+
+      return json({
+        success: true,
+        regulatoryAuthority: 'Department of Registration and Stamps, Government of Karnataka',
+        applicableActs: [
+          'Chit Funds Act, 1982 (Act No. 40 of 1982)',
+          'Chit Funds (Amendment) Act, 2019',
+          'Karnataka Chit Funds Rules, 1983',
+          'Digital Personal Data Protection (DPDP) Act, 2023'
+        ],
+        stats: {
+          registeredChitsCount: groupsCount,
+          totalPoolEscrowMinor: totalPoolRow.total_pool || 0,
+          verifiedKycCount,
+          approvedSuretiesCount: approvedSureties,
+          isLedgerBalanced: reconciliation.isFullyBalanced,
+          systemVariancePaise: reconciliation.systemVariance
+        }
+      });
+    }
+
     let params = matchRoute('/api/groups/:id', pathname);
     if (method === 'GET' && params) {
       const group = groupService.getGroupDetails(params.id);

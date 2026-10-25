@@ -1,28 +1,30 @@
 # Local Connectivity Chit-Fund Platform
 
-> **A Mobile-First, Locally Anchored Chit-Fund Management Platform with Double-Entry Balanced Ledger, Live Reverse-Auction Bidding Arena, Multi-Chit Portfolio Manager, and Section 31 Surety Verification Console.**
+> **A Mobile-First, Locally Anchored Chit-Fund Management Platform with Double-Entry Balanced Ledger, Live Reverse-Auction Bidding Arena, Multi-Chit Portfolio Manager, Section 31 Surety Console, and Bilingual (English & ಕನ್ನಡ) Localization.**
 
-Compliant with the **Indian Chit Funds Act, 1982 (Act No. 40 of 1982)**, **Chit Funds (Amendment) Act, 2019**, and **Digital Personal Data Protection (DPDP) Act, 2023**. Built with high reliability, zero external runtime dependencies, embedded relational database integrity (`node:sqlite`), and tamper-evident SHA-256 audit logging.
+Compliant with the **Indian Chit Funds Act, 1982 (Act No. 40 of 1982)**, **Chit Funds (Amendment) Act, 2019**, **Karnataka Chit Funds Rules, 1983**, and **Digital Personal Data Protection (DPDP) Act, 2023**. Built with high reliability, zero external runtime dependencies, embedded relational database integrity (`node:sqlite`), and tamper-evident SHA-256 audit logging.
 
 ---
 
 ## Table of Contents
 
 1. [Executive Summary & Core Principles](#1-executive-summary--core-principles)
-2. [Domain Knowledge & Legal Foundation](#2-domain-knowledge--legal-foundation)
-3. [Git Workflow & Clone Instructions](#3-git-workflow--clone-instructions)
-4. [Prerequisites & Zero-Dependency Quickstart](#4-prerequisites--zero-dependency-quickstart)
-5. [Five Purposeful Navigation Portals](#5-five-purposeful-navigation-portals)
-6. [Interactive User Roles & Demo Accounts](#6-interactive-user-roles--demo-accounts)
-7. [Trust & Multi-Government Document Verification](#7-trust--multi-government-document-verification)
-8. [Double-Entry Balanced Ledger Engine](#8-double-entry-balanced-ledger-engine)
-9. [Live Reverse-Auction Arena & Statutory Rules](#9-live-reverse-auction-arena--statutory-rules)
-10. [Section 31 Prized Subscriber Surety Verification](#10-section-31-prized-subscriber-surety-verification)
-11. [Multi-Chit Portfolio Management](#11-multi-chit-portfolio-management)
-12. [Automated Testing & QA Verification (40/40 Tests Passing)](#12-automated-testing--qa-verification-4040-tests-passing)
-13. [REST API Surface](#13-rest-api-surface)
-14. [Production Deployment & Docker Guide](#14-production-deployment--docker-guide)
-15. [Security, Privacy & Compliance Controls](#15-security-privacy--compliance-controls)
+2. [Bilingual Support: English & Kannada (ಕನ್ನಡ)](#2-bilingual-support-english--kannada-ಕನ್ನಡ)
+3. [Domain Knowledge & Legal Foundation](#3-domain-knowledge--legal-foundation)
+4. [Git Workflow & Clone Instructions](#4-git-workflow--clone-instructions)
+5. [Prerequisites & Zero-Dependency Quickstart](#5-prerequisites--zero-dependency-quickstart)
+6. [Five Purposeful Navigation Portals](#6-five-purposeful-navigation-portals)
+7. [Host Desk Administration & Statutory Filings (Form XXI)](#7-host-desk-administration--statutory-filings-form-xxi)
+8. [Double-Entry Balanced Ledger Engine & Passbook Export](#8-double-entry-balanced-ledger-engine--passbook-export)
+9. [Trust, Government Accreditation & Four Pillars](#9-trust-government-accreditation--four-pillars)
+10. [Live Reverse-Auction Arena & Statutory Rules](#10-live-reverse-auction-arena--statutory-rules)
+11. [Section 31 Prized Subscriber Surety Verification](#11-section-31-prized-subscriber-surety-verification)
+12. [Multi-Chit Portfolio Management](#12-multi-chit-portfolio-management)
+13. [Interactive User Roles & Demo Accounts](#13-interactive-user-roles--demo-accounts)
+14. [Automated Testing & QA Verification (44/44 Tests Passing)](#14-automated-testing--qa-verification-4444-tests-passing)
+15. [REST API Surface](#15-rest-api-surface)
+16. [Production Deployment & Docker Guide](#16-production-deployment--docker-guide)
+17. [Security, Privacy & Compliance Controls](#17-security-privacy--compliance-controls)
 
 ---
 
@@ -38,6 +40,19 @@ The **Local Connectivity Chit-Fund Platform** converts traditional, relationship
 - **Strict Maker-Checker Separation:** Financial payouts require segregation of duties—an Operations administrator initiates (Maker), and a Finance administrator authorizes (Checker).
 - **Hybrid by Design:** Both digital UPI collections and offline cash collections post to the exact same immutable ledger once verified by the Chit Host.
 - **Tamper-Evident Auditability:** Every state transition and financial action records an immutable audit entry with SHA-256 state hashes.
+
+---
+
+## 2. Bilingual Support: English & Kannada (ಕನ್ನಡ)
+
+The entire platform features full bilingual support tailored specifically for Karnataka chit fund operations (Indiranagar, Koramangala, Jayanagar, HSR Layout, Whitefield):
+
+- **Instant Language Toggle Button:** Located at the top header (`🌐 English | ಕನ್ನಡ`).
+- **Complete Translation Dictionary:**
+  - Navigation tabs (ಲೈವ್ ಹರಾಜು ಅರೆನಾ, ನನ್ನ ಪೋರ್ಟ್‌ಫೋಲಿಯೋ, ಚಿಟ್‌ಗಳನ್ನು ಹುಡುಕಿ, ಹೋಸ್ಟ್ ಡೆಸ್ಕ್, ಸಮತೋಲಿತ ಲೆಡ್ಜರ್, ಸರ್ಕಾರಿ ನಂಬಿಕೆ & ಆಡಳಿತ).
+  - Financial & legal terminology (ರಿಯಾಯಿತಿ ಬಿಡ್, ಲಾಭಾಂಶ, ಬಹುಮಾನದ ಹಣ, ಬಾಕಿ ಕಂತು, ಸೆಕ್ಷನ್ 31 ಜಾಮೀನು ಪತ್ರ, ನಮೂನೆ XXI ಪೂರ್ವ ಮಂಜೂರಾತಿ ಪ್ರಮಾಣಪತ್ರ).
+  - Dues banners, buttons, and alert notifications.
+- **Client-Side Persistence:** Automatically remembers user preference in `localStorage` across page visits.
 
 ---
 
@@ -274,9 +289,9 @@ Subscribers often hold multiple tickets across different chit groups for distinc
 
 ---
 
-## 12. Automated Testing & QA Verification (40/40 Tests Passing)
+## 14. Automated Testing & QA Verification (44/44 Tests Passing)
 
-The project includes an automated test suite executed with the native Node.js test runner across 7 comprehensive test modules:
+The project includes an automated test suite executed with the native Node.js test runner across 8 comprehensive test modules:
 
 ```bash
 npm test
@@ -284,7 +299,12 @@ npm test
 node --test tests/*.test.js
 ```
 
-### Complete Test Matrix (40 Tests, 100% Pass Rate, ~340ms Execution):
+### Complete Test Matrix (44 Tests, 100% Pass Rate, ~350ms Execution):
+- **`tests/hostAndBilingual.test.js` (4 tests)**:
+  - Calculates Host overview metrics, enrolled subscriber totals, and active cycles accurately.
+  - Verifies Double-Entry general ledger trial balance has zero discrepancy ($\sum \text{Debits} - \sum \text{Credits} = 0$).
+  - Verifies government statutory accreditation parameters (License #, Bank Guarantee #, Trust Score >= 95).
+  - Enforces Host cycle administration: competitive bidding and finalizing close.
 - **`tests/multiChitAndBidding.test.js` (5 tests)**:
   - Multi-chit portfolio calculation across memberships, ticket slots, dividends, and dues.
   - Live bidding room state with real-time financial calculations and eligible bidders.

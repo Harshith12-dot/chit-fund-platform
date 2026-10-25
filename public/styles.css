@@ -1440,3 +1440,428 @@ body {
   font-weight: 700;
   margin-bottom: 6px;
 }
+
+/* ==========================================================================
+   LANGUAGE TOGGLE SWITCHER & BILINGUAL UI
+   ========================================================================== */
+.lang-switch-box {
+  display: flex;
+  align-items: center;
+}
+
+.lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-sans);
+}
+
+.lang-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: var(--accent-gold);
+  transform: translateY(-1px);
+}
+
+.lang-label-active {
+  color: #FFFFFF;
+}
+
+.lang-divider {
+  opacity: 0.4;
+  font-size: 0.8rem;
+}
+
+.lang-alt {
+  color: #F7E0B5;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   HOST DESK ENHANCED: OVERVIEW KPIS & STATUTORY FILINGS
+   ========================================================================== */
+.host-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.host-kpi-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.host-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.host-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.host-kpi-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--primary-navy);
+}
+
+.statutory-card {
+  background: linear-gradient(135deg, #0B2545 0%, #153A65 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.statutory-card::before {
+  content: "🏛️";
+  position: absolute;
+  right: -15px;
+  bottom: -20px;
+  font-size: 8rem;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.statutory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.statutory-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.govt-seal-badge {
+  background: rgba(194, 135, 35, 0.25);
+  border: 1px solid #C28723;
+  color: #F7E0B5;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+.statutory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.statutory-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+
+.statutory-pill-label {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.statutory-pill-val {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+}
+
+.btn-inspect-cert {
+  background: linear-gradient(135deg, #C28723 0%, #D49B36 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-inspect-cert:hover {
+  box-shadow: 0 4px 12px rgba(194, 135, 35, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   BALANCED LEDGER CERTIFICATE & INTERACTIVE EXPLORER
+   ========================================================================== */
+.ledger-balance-cert {
+  background: #F0FDF4;
+  border: 1.5px solid var(--success-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.cert-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cert-icon-seal {
+  background: #10B981;
+  color: #FFFFFF;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+.coa-filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.coa-filter-btn {
+  background: #F1F5F9;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.coa-filter-btn:hover {
+  background: #E2E8F0;
+  color: var(--text-main);
+}
+
+.coa-filter-btn.active {
+  background: var(--primary-navy);
+  color: #FFFFFF;
+  border-color: var(--primary-navy);
+}
+
+/* ==========================================================================
+   TRUST & GOVERNMENT GOVERNANCE PILLARS
+   ========================================================================== */
+.trust-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.trust-pillar-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.trust-pillar-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.pillar-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: #FEF8EC;
+  border: 1px solid var(--gold-border);
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.pillar-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin-bottom: 4px;
+}
+
+.pillar-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.pillar-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #ECFDF5;
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+/* ==========================================================================
+   FORM XXI GOVERNMENT CERTIFICATE MODAL
+   ========================================================================== */
+.cert-modal-box {
+  max-width: 680px;
+  background: #FFFDF9;
+  border: 2px solid #C28723;
+  border-radius: 12px;
+  padding: 28px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(11, 37, 69, 0.25);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.cert-outer-frame {
+  border: 2px solid #C28723;
+  padding: 16px;
+  position: relative;
+  background: #FFFFFF;
+}
+
+.cert-govt-heading {
+  text-align: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #C28723;
+  padding-bottom: 12px;
+}
+
+.cert-state-seal {
+  font-size: 2.2rem;
+  margin-bottom: 4px;
+}
+
+.cert-state-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0B2545;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cert-dept-subtitle {
+  font-size: 0.85rem;
+  color: #64748B;
+  font-style: italic;
+}
+
+.cert-form-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #C28723;
+  margin-top: 6px;
+  text-decoration: underline;
+}
+
+.cert-prose {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #1E293B;
+  margin-bottom: 16px;
+  text-align: justify;
+}
+
+.cert-specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+
+.cert-specs-table th, .cert-specs-table td {
+  border: 1px solid #CBD5E1;
+  padding: 6px 10px;
+}
+
+.cert-specs-table th {
+  background: #F8FAFC;
+  text-align: left;
+  font-weight: 700;
+  color: #0B2545;
+}
+
+.cert-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px dashed #CBD5E1;
+}
+
+.cert-registrar-sign {
+  text-align: center;
+}
+
+.cert-seal-stamp {
+  width: 72px;
+  height: 72px;
+  border: 2px dashed #C28723;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #C28723;
+  text-transform: uppercase;
+  transform: rotate(-12deg);
+}

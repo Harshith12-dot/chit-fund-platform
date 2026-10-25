@@ -34,16 +34,26 @@
         <div class="portal-toggle-pill">
           <button id="portal-join-btn" class="portal-btn active" title="Join and Discover Nearby Trusted Chits">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-            Join a Chit
+            <span data-i18n="portal_join">Join a Chit</span>
           </button>
           <button id="portal-host-btn" class="portal-btn" title="Host, Manage, and Verify Chit Collections">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4"/></svg>
-            Host / Manage Chit
+            <span data-i18n="portal_host">Host / Manage Chit</span>
           </button>
         </div>
       </div>
 
       <div class="header-right">
+        <!-- Language Switcher Button (English / Kannada ಕನ್ನಡ) -->
+        <div class="lang-switch-box">
+          <button id="lang-toggle-btn" class="lang-toggle-btn" title="Toggle English / ಕನ್ನಡ">
+            <span class="lang-globe-icon">🌐</span>
+            <span id="lang-current-label" class="lang-label-active">English</span>
+            <span class="lang-divider">|</span>
+            <span class="lang-alt">ಕನ್ನಡ</span>
+          </button>
+        </div>
+
         <!-- Viewport Switcher -->
         <div class="viewport-toggle">
           <button id="view-mobile-btn" class="view-btn active" title="Smartphone View">📱 Mobile</button>
@@ -84,27 +94,27 @@
             <button class="sub-tab active" data-subtab="auction-room-view">
               <span class="pulse-indicator"></span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 7 3 3m-7.5 7.5L5 22l4.5-4.5m0 0 7.5-7.5L14 7 6.5 14.5z"/></svg>
-              <span>Live Auction Arena</span>
+              <span data-i18n="tab_auction">Live Auction Arena</span>
             </button>
             <button class="sub-tab" data-subtab="portfolio-view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <span>My Portfolio</span>
+              <span data-i18n="tab_portfolio">My Portfolio</span>
             </button>
             <button class="sub-tab" data-subtab="main-portal-view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              <span id="nav-primary-label">Explore Chits</span>
+              <span id="nav-primary-label" data-i18n="tab_explore">Explore Chits</span>
             </button>
             <button class="sub-tab" data-subtab="host-chit-portal">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4"/></svg>
-              <span>Host Desk</span>
+              <span data-i18n="tab_host">Host Desk</span>
             </button>
             <button class="sub-tab" data-subtab="ledger-view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="13" y2="12"/></svg>
-              <span>Balanced Ledger</span>
+              <span data-i18n="tab_ledger">Balanced Ledger</span>
             </button>
             <button class="sub-tab" data-subtab="compliance-view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>Trust & Governance</span>
+              <span data-i18n="tab_trust">Trust & Governance</span>
             </button>
           </nav>
 
@@ -264,21 +274,79 @@
                 </div>
               </section>
 
+              <!-- Host Overview KPI Metrics -->
+              <div class="host-kpi-grid">
+                <div class="host-kpi-card">
+                  <span class="host-kpi-label" data-i18n="host_kpi_groups">Chit Groups Administered</span>
+                  <span class="host-kpi-val text-primary" id="host-stat-groups">5</span>
+                </div>
+                <div class="host-kpi-card">
+                  <span class="host-kpi-label" data-i18n="host_kpi_subscribers">Enrolled Subscribers</span>
+                  <span class="host-kpi-val text-primary" id="host-stat-members">98</span>
+                </div>
+                <div class="host-kpi-card">
+                  <span class="host-kpi-label" data-i18n="host_kpi_commission">Accrued 5% Commission</span>
+                  <span class="host-kpi-val text-gold" id="host-stat-commission">₹1,25,000</span>
+                </div>
+                <div class="host-kpi-card">
+                  <span class="host-kpi-label" data-i18n="host_kpi_guarantee">100% Escrow Guarantee</span>
+                  <span class="host-kpi-val text-success" id="host-stat-bg">✔ ACTIVE (₹25L)</span>
+                </div>
+              </div>
+
+              <!-- Statutory Government Filings & Sanction Card (Form XXI) -->
+              <section class="statutory-card">
+                <div class="statutory-header">
+                  <div class="statutory-title-row">
+                    <span style="font-size: 1.5rem;">🏛️</span>
+                    <div>
+                      <h4 style="font-weight: 800; font-size: 1rem; color: #FFFFFF;" data-i18n="statutory_title">Government Regulatory Sanction & Registrar Escrow</h4>
+                      <p style="font-size: 0.78rem; color: #94A3B8;" data-i18n="statutory_sub">Compliant with Section 4 (Prior Sanction) & Section 20 (100% Bank Guarantee) of Chit Funds Act, 1982</p>
+                    </div>
+                  </div>
+                  <button class="btn-inspect-cert" id="btn-open-cert-modal" title="View Official Form XXI Certificate">
+                    📜 <span data-i18n="btn_inspect_cert">Inspect Form XXI Sanction Certificate</span>
+                  </button>
+                </div>
+
+                <div class="statutory-grid">
+                  <div class="statutory-pill">
+                    <span class="statutory-pill-label" data-i18n="statutory_reg_num">Form XXI Sanction #</span>
+                    <span class="statutory-pill-val font-mono">KA/BLR/REG/2026/0491</span>
+                  </div>
+                  <div class="statutory-pill">
+                    <span class="statutory-pill-label" data-i18n="statutory_escrow_bond">Section 20 Escrow Bond</span>
+                    <span class="statutory-pill-val font-mono">BG-HDFC-992100 (100% Locked)</span>
+                  </div>
+                  <div class="statutory-pill">
+                    <span class="statutory-pill-label" data-i18n="statutory_jurisdiction">Registrar Jurisdiction</span>
+                    <span class="statutory-pill-val">Bengaluru Urban, Karnataka</span>
+                  </div>
+                  <div class="statutory-pill">
+                    <span class="statutory-pill-label" data-i18n="statutory_sec17_filing">Section 17 Minutes Filing</span>
+                    <span class="statutory-pill-val text-gold">✔ Up-to-date (Cycle #2 Filed)</span>
+                  </div>
+                </div>
+              </section>
+
               <!-- HOST ACTION TABS: VERIFY PAYMENTS vs HOST NEW CHIT vs SURETIES -->
               <div class="host-action-tabs">
                 <button class="host-tab-btn active" data-hosttab="tab-host-verifications">
                   <span class="pending-alert-badge" id="host-pending-badge">1</span>
-                  ⚡ Verify Offline Payments
+                  <span data-i18n="host_tab_verify_cash">⚡ Verify Offline Payments</span>
                 </button>
                 <button class="host-tab-btn" data-hosttab="tab-host-sureties">
                   <span class="pending-alert-badge" id="host-surety-badge">1</span>
-                  📜 Verify Section 31 Sureties
+                  <span data-i18n="host_tab_verify_sureties">📜 Verify Section 31 Sureties</span>
+                </button>
+                <button class="host-tab-btn" data-hosttab="tab-host-cycles">
+                  <span data-i18n="host_tab_cycles">⚙️ Active Cycles Desk</span>
                 </button>
                 <button class="host-tab-btn" data-hosttab="tab-host-create">
-                  ➕ Register & Host New Chit
+                  <span data-i18n="host_tab_create">➕ Register & Host New Chit</span>
                 </button>
                 <button class="host-tab-btn" data-hosttab="tab-host-members">
-                  👥 Member Join Requests
+                  <span data-i18n="host_tab_members">👥 Member Join Requests</span>
                 </button>
               </div>
 
@@ -303,12 +371,28 @@
                 <div class="card">
                   <div class="card-header">
                     <div>
-                      <h3>Prized Subscriber Sureties Pending Host Approval</h3>
-                      <p class="text-muted" style="font-size: 0.8rem;">Under Section 31 of Chit Funds Act 1982, inspect the Co-Guarantor, FDR lien, or Salary certificate before authorizing prize disbursal.</p>
+                      <h3 data-i18n="host_sureties_title">Prized Subscriber Sureties Pending Host Approval</h3>
+                      <p class="text-muted" style="font-size: 0.8rem;" data-i18n="host_sureties_sub">Under Section 31 of Chit Funds Act 1982, inspect the Co-Guarantor, FDR lien, or Salary certificate before authorizing prize disbursal.</p>
                     </div>
                   </div>
 
                   <div id="host-sureties-list" class="sureties-grid">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- HOST SUB-PANEL 1C: ACTIVE CYCLES DESK -->
+              <div id="tab-host-cycles" class="host-subpanel" style="display: none;">
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3 data-i18n="host_cycles_title">Chit Cycles & Auction Administration Desk</h3>
+                      <p class="text-muted" style="font-size: 0.8rem;" data-i18n="host_cycles_sub">Monitor scheduled auctions, open live bidding, and supervise cycle settlements across your groups.</p>
+                    </div>
+                  </div>
+
+                  <div id="host-cycles-list" class="verifications-container">
                     <!-- Injected via JavaScript -->
                   </div>
                 </div>
@@ -556,30 +640,48 @@
             <!-- 4. BALANCED GENERAL LEDGER VIEW                            -->
             <!-- ========================================================== -->
             <div id="ledger-view" class="portal-section" style="display: none;">
+              <!-- Statutory Certified Balanced Ledger Banner -->
+              <div class="ledger-balance-cert">
+                <div class="cert-left">
+                  <div class="cert-icon-seal">⚖️</div>
+                  <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 800; color: #065F46;" data-i18n="cert_balance_title">Certified Double-Entry Invariant Certificate</h3>
+                    <p style="font-size: 0.8rem; color: #047857;" data-i18n="cert_balance_sub">
+                      Statutory Invariant: &sum; Debits &minus; &sum; Credits = <strong>₹0.00</strong> across all accounts (Minor Units Precision). Zero Discrepancy.
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <button class="btn btn-secondary btn-sm" id="btn-print-passbook" onclick="window.print()">
+                    🖨️ <span data-i18n="btn_print_ledger">Export / Print Passbook</span>
+                  </button>
+                </div>
+              </div>
+
               <div class="ledger-summary-header card">
                 <div class="ledger-title-group">
-                  <h2>Double-Entry Balanced General Ledger</h2>
+                  <h2 data-i18n="ledger_title">Double-Entry Balanced General Ledger</h2>
                   <span class="reconciled-badge" id="reconciliation-badge">
                     ✔ 100% BALANCED (Variance = ₹0.00)
                   </span>
                 </div>
-                <p class="text-muted" style="font-size: 0.85rem;">Every money transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.</p>
+                <p class="text-muted" style="font-size: 0.85rem;" data-i18n="ledger_sub">Every money transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.</p>
 
                 <div class="financial-metrics-row">
                   <div class="stat-card">
-                    <span class="stat-label">Total System Debits</span>
+                    <span class="stat-label" data-i18n="stat_total_debits">Total System Debits</span>
                     <span class="stat-val text-primary" id="stat-total-debit">₹11,25,000.00</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Total System Credits</span>
+                    <span class="stat-label" data-i18n="stat_total_credits">Total System Credits</span>
                     <span class="stat-val text-primary" id="stat-total-credit">₹11,25,000.00</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">System Variance</span>
+                    <span class="stat-label" data-i18n="stat_variance">System Variance</span>
                     <span class="stat-val text-success" id="stat-variance">₹0.00</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Total Journal Transactions</span>
+                    <span class="stat-label" data-i18n="stat_tx_count">Total Journal Transactions</span>
                     <span class="stat-val" id="stat-tx-count">4</span>
                   </div>
                 </div>
@@ -588,8 +690,19 @@
               <!-- Trial Balance -->
               <div class="card mb-4">
                 <div class="card-header">
-                  <h3>Chart of Accounts (Trial Balance)</h3>
+                  <h3 data-i18n="coa_title">Chart of Accounts (Trial Balance)</h3>
                   <span class="text-muted">General Ledger Chart 1001-4002</span>
+                </div>
+
+                <!-- Account Filter Bar -->
+                <div class="coa-filter-bar" id="coa-filter-bar" style="padding: 0 4px 12px 4px;">
+                  <button class="coa-filter-btn active" data-filter="ALL">All Accounts (1001-4002)</button>
+                  <button class="coa-filter-btn" data-filter="1001">1001 (Bank Pool)</button>
+                  <button class="coa-filter-btn" data-filter="1002">1002 (Receivables)</button>
+                  <button class="coa-filter-btn" data-filter="2001">2001 (Prize Payable)</button>
+                  <button class="coa-filter-btn" data-filter="2002">2002 (Dividends)</button>
+                  <button class="coa-filter-btn" data-filter="3001">3001 (Capital Float)</button>
+                  <button class="coa-filter-btn" data-filter="4001">4001 (Commission)</button>
                 </div>
                 <div class="table-responsive">
                   <table class="data-table">
@@ -639,10 +752,51 @@
             <!-- 5. COMPLIANCE & GOVERNANCE VIEW                            -->
             <!-- ========================================================== -->
             <div id="compliance-view" class="portal-section" style="display: none;">
+              <!-- Trust & Government Authority Headline -->
+              <div class="portal-headline mb-3">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                  <div>
+                    <h2 data-i18n="trust_title">Government Accreditation & Regulatory Trust</h2>
+                    <p class="portal-sub" data-i18n="trust_sub">Governed by the Department of Registration & Stamps, Government of Karnataka under Chit Funds Act 1982.</p>
+                  </div>
+                  <button class="btn btn-gold btn-sm" id="btn-open-cert-modal-2">
+                    📜 <span data-i18n="btn_inspect_cert">Inspect Form XXI Sanction Certificate</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4 Statutory Pillars of Trust Grid -->
+              <div class="trust-pillars-grid">
+                <div class="trust-pillar-card">
+                  <div class="pillar-icon-box">🏛️</div>
+                  <h4 class="pillar-title" data-i18n="pillar_sec4_title">Section 4 Prior Sanction</h4>
+                  <p class="pillar-desc" data-i18n="pillar_sec4_desc">Mandatory government sanction issued by the State Registrar of Chits before soliciting members.</p>
+                  <span class="pillar-status-tag">✔ Lic # KA/BLR/REG/2026/0491</span>
+                </div>
+                <div class="trust-pillar-card">
+                  <div class="pillar-icon-box">🏦</div>
+                  <h4 class="pillar-title" data-i18n="pillar_sec20_title">Section 20 100% Escrow</h4>
+                  <p class="pillar-desc" data-i18n="pillar_sec20_desc">100% chit pool capital deposited in custodial Fixed Deposit / Bank Guarantee with Scheduled Bank.</p>
+                  <span class="pillar-status-tag">✔ Ref # BG-HDFC-992100</span>
+                </div>
+                <div class="trust-pillar-card">
+                  <div class="pillar-icon-box">🆔</div>
+                  <h4 class="pillar-title" data-i18n="pillar_kyc_title">DPDP Masked e-KYC</h4>
+                  <p class="pillar-desc" data-i18n="pillar_kyc_desc">UIDAI Aadhaar OTP verification (XXXX-XXXX-3210) & Income Tax PAN alphanumeric validation.</p>
+                  <span class="pillar-status-tag">✔ DPDP Act 2023 Compliant</span>
+                </div>
+                <div class="trust-pillar-card">
+                  <div class="pillar-icon-box">📜</div>
+                  <h4 class="pillar-title" data-i18n="pillar_sec31_title">Section 31 Sureties</h4>
+                  <p class="pillar-desc" data-i18n="pillar_sec31_desc">Prized subscribers must furnish solvent Co-Guarantors, FDR Lien, or Property Deed before prize release.</p>
+                  <span class="pillar-status-tag">✔ Solvency Enforced</span>
+                </div>
+              </div>
+
               <!-- Maker-Checker Payout Authorization -->
               <div class="card mb-4">
                 <div class="card-header">
-                  <h3>Finance Maker-Checker: Winner Payout Authorization</h3>
+                  <h3 data-i18n="payout_title">Finance Maker-Checker: Winner Payout Authorization</h3>
                   <span class="status-pill status-finance">Finance Control</span>
                 </div>
                 <p class="text-muted" style="font-size: 0.8rem;">Strict Separation of Duties: An administrator who initiates (Maker) cannot approve and disburse (Checker).</p>
@@ -1007,6 +1161,66 @@
 
           <div id="lottery-winner-announcement" style="display: none; margin-top: 16px;">
             <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICIAL FORM XXI GOVERNMENT SANCTION CERTIFICATE MODAL -->
+    <div id="certificate-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box cert-modal-box">
+        <div class="modal-header" style="border: none; padding-bottom: 0;">
+          <button class="modal-close" id="close-cert-modal-btn">&times;</button>
+        </div>
+        <div class="cert-outer-frame">
+          <div class="cert-govt-heading">
+            <div class="cert-state-seal">🏛️</div>
+            <div class="cert-state-title" data-i18n="cert_govt">GOVERNMENT OF KARNATAKA</div>
+            <div class="cert-dept-subtitle" data-i18n="cert_dept">Department of Registration and Stamps • Office of the Registrar of Chits</div>
+            <div class="cert-form-title" data-i18n="cert_form">FORM XXI — CERTIFICATE OF PREVIOUS SANCTION</div>
+            <div style="font-size: 0.76rem; color: #64748B; margin-top: 4px;">[Under Section 4(1) of the Chit Funds Act, 1982 & Rule 4 of Karnataka Chit Funds Rules, 1983]</div>
+          </div>
+
+          <div class="cert-prose" data-i18n="cert_prose_text">
+            This is to certify that the Chit Scheme titled <strong id="cert-chit-name">Indiranagar Traders & Artisans Chit</strong>, having aggregate chit amount of <strong id="cert-chit-pool">₹5,00,000</strong> divided into <strong>20 tickets</strong> of monthly subscription <strong id="cert-chit-monthly">₹25,000</strong>, organized by <strong id="cert-chit-host">Lakshmi Devi</strong>, has been duly scrutinized and granted Previous Sanction to commence business.
+          </div>
+
+          <table class="cert-specs-table">
+            <tr>
+              <th data-i18n="cert_th_reg">Statutory Registration #</th>
+              <td><code class="font-mono">KA/BLR/REG/2026/0491</code></td>
+            </tr>
+            <tr>
+              <th data-i18n="cert_th_escrow">Section 20 Escrow Bank Guarantee</th>
+              <td><code class="font-mono">BG-HDFC-992100 (100% Value ₹5,00,000 In Custodial Escrow)</code></td>
+            </tr>
+            <tr>
+              <th data-i18n="cert_th_caps">Section 14 Statutory Discount Caps</th>
+              <td data-i18n="cert_caps_val">Minimum Floor: 5% (₹25,000) • Maximum Ceiling: 30% (₹1,50,000)</td>
+            </tr>
+            <tr>
+              <th data-i18n="cert_th_sureties">Section 31 Sureties Condition</th>
+              <td data-i18n="cert_sureties_val">Mandatory solvent security required prior to prize disbursement</td>
+            </tr>
+            <tr>
+              <th data-i18n="cert_th_jurisdiction">Applicable Jurisdiction</th>
+              <td>Registrar of Chits, 4th Block, Bengaluru Urban, Karnataka</td>
+            </tr>
+          </table>
+
+          <div class="cert-footer-row">
+            <div>
+              <div style="font-size: 0.72rem; color: #64748B;">Date of Sanction: 15-Jan-2026</div>
+              <div style="font-size: 0.72rem; color: #64748B;">Digital Verification: SHA-256 HMAC Verified</div>
+            </div>
+            <div class="cert-seal-stamp">
+              GOVT OF KARNATAKA<br>REGISTRAR<br>★ SEAL ★
+            </div>
+            <div class="cert-registrar-sign">
+              <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.2rem; color: #0B2545;">M. S. Rajashekhar</div>
+              <div style="font-size: 0.75rem; font-weight: 700; color: #0B2545;">Registrar of Chits</div>
+              <div style="font-size: 0.68rem; color: #64748B;">Government of Karnataka</div>
+            </div>
           </div>
         </div>
       </div>

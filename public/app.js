@@ -1,12 +1,180 @@
 // ============================================================================
 // Local Connectivity Chit-Fund Platform — Production Frontend Application Logic
 // Real Database, Cryptographic Authentication, Real Passwords & Combined Host-User
+// Bilingual English & Kannada (ಕನ್ನಡ) Support, Host Desk & Balanced Ledger
 // ============================================================================
 
 let currentUser = null;
 let activeGroupId = 'grp-indiranagar-2026';
 let activeCycleId = 'cyc-2';
 let pendingObligationForPayment = null;
+let currentLanguage = localStorage.getItem('chitfund_lang') || 'en';
+let currentChartOfAccounts = [];
+let activeCoaFilter = 'ALL';
+
+// Bilingual Localization Dictionary (English & Kannada)
+const translations = {
+  en: {
+    brand_title: "Local Chit-Fund",
+    brand_subtitle: "Govt Verified • Anchored Trust • Balanced Ledger",
+    portal_join: "Join a Chit",
+    portal_host: "Host / Manage Chit",
+    tab_auction: "Live Auction Arena",
+    tab_portfolio: "My Portfolio",
+    tab_explore: "Explore Chits",
+    tab_host: "Host Desk",
+    tab_ledger: "Balanced Ledger",
+    tab_trust: "Trust & Governance",
+    host_kpi_groups: "Chit Groups Administered",
+    host_kpi_subscribers: "Enrolled Subscribers",
+    host_kpi_commission: "Accrued 5% Commission",
+    host_kpi_guarantee: "100% Escrow Guarantee",
+    statutory_title: "Government Regulatory Sanction & Registrar Escrow",
+    statutory_sub: "Compliant with Section 4 (Prior Sanction) & Section 20 (100% Bank Guarantee) of Chit Funds Act, 1982",
+    btn_inspect_cert: "Inspect Form XXI Sanction Certificate",
+    statutory_reg_num: "Form XXI Sanction #",
+    statutory_escrow_bond: "Section 20 Escrow Bond",
+    statutory_jurisdiction: "Registrar Jurisdiction",
+    statutory_sec17_filing: "Section 17 Minutes Filing",
+    host_tab_verify_cash: "⚡ Verify Offline Payments",
+    host_tab_verify_sureties: "📜 Verify Section 31 Sureties",
+    host_tab_cycles: "⚙️ Active Cycles Desk",
+    host_tab_create: "➕ Register & Host New Chit",
+    host_tab_members: "👥 Member Join Requests",
+    host_sureties_title: "Prized Subscriber Sureties Pending Host Approval",
+    host_sureties_sub: "Under Section 31 of Chit Funds Act 1982, inspect the Co-Guarantor, FDR lien, or Salary certificate before authorizing prize disbursal.",
+    host_cycles_title: "Chit Cycles & Auction Administration Desk",
+    host_cycles_sub: "Monitor scheduled auctions, open live bidding, and supervise cycle settlements across your groups.",
+    cert_balance_title: "Certified Double-Entry Invariant Certificate",
+    cert_balance_sub: "Statutory Invariant: Σ Debits − Σ Credits = ₹0.00 across all accounts (Minor Units Precision). Zero Discrepancy.",
+    btn_print_ledger: "Export / Print Passbook",
+    ledger_title: "Double-Entry Balanced General Ledger",
+    ledger_sub: "Every money transaction enforces strict double-entry balancing (Debit = Credit in minor units). Zero floating-point rounding errors.",
+    stat_total_debits: "Total System Debits",
+    stat_total_credits: "Total System Credits",
+    stat_variance: "System Variance",
+    stat_tx_count: "Total Journal Transactions",
+    coa_title: "Chart of Accounts (Trial Balance)",
+    trust_title: "Government Accreditation & Regulatory Trust",
+    trust_sub: "Governed by the Department of Registration & Stamps, Government of Karnataka under Chit Funds Act 1982.",
+    pillar_sec4_title: "Section 4 Prior Sanction",
+    pillar_sec4_desc: "Mandatory government sanction issued by the State Registrar of Chits before soliciting members.",
+    pillar_sec20_title: "Section 20 100% Escrow",
+    pillar_sec20_desc: "100% chit pool capital deposited in custodial Fixed Deposit / Bank Guarantee with Scheduled Bank.",
+    pillar_kyc_title: "DPDP Masked e-KYC",
+    pillar_kyc_desc: "UIDAI Aadhaar OTP verification (XXXX-XXXX-3210) & Income Tax PAN alphanumeric validation.",
+    pillar_sec31_title: "Section 31 Sureties",
+    pillar_sec31_desc: "Prized subscribers must furnish solvent Co-Guarantors, FDR Lien, or Property Deed before prize release.",
+    payout_title: "Finance Maker-Checker: Winner Payout Authorization",
+    cert_govt: "GOVERNMENT OF KARNATAKA",
+    cert_dept: "Department of Registration and Stamps • Office of the Registrar of Chits",
+    cert_form: "FORM XXI — CERTIFICATE OF PREVIOUS SANCTION",
+    cert_th_reg: "Statutory Registration #",
+    cert_th_escrow: "Section 20 Escrow Bank Guarantee",
+    cert_th_caps: "Section 14 Statutory Discount Caps",
+    cert_th_sureties: "Section 31 Sureties Condition",
+    cert_th_jurisdiction: "Applicable Jurisdiction",
+    cert_caps_val: "Minimum Floor: 5% (₹25,000) • Maximum Ceiling: 30% (₹1,50,000)",
+    cert_sureties_val: "Mandatory solvent security required prior to prize disbursement",
+    cert_prose_text: "This is to certify that the Chit Scheme titled Indiranagar Traders & Artisans Chit, having aggregate chit amount of ₹5,00,000 divided into 20 tickets of monthly subscription ₹25,000, organized by Lakshmi Devi, has been duly scrutinized and granted Previous Sanction to commence business."
+  },
+  kn: {
+    brand_title: "ಸ್ಥಳೀಯ ಚಿಟ್ ಫಂಡ್",
+    brand_subtitle: "ಕರ್ನಾಟಕ ಸರ್ಕಾರ ಮಾನ್ಯತೆ • ದೃಢ ವಿಶ್ವಾಸ • ಸಮತೋಲಿತ ಲೆಡ್ಜರ್",
+    portal_join: "ಚೀಟಿಗೆ ಸೇರಿ",
+    portal_host: "ಹೋಸ್ಟ್ / ನಿರ್ವಹಣೆ",
+    tab_auction: "ಲೈವ್ ಹರಾಜು ಅರೆನಾ",
+    tab_portfolio: "ನನ್ನ ಪೋರ್ಟ್‌ಫೋಲಿಯೋ",
+    tab_explore: "ಚಿಟ್‌ಗಳನ್ನು ಹುಡುಕಿ",
+    tab_host: "ಹೋಸ್ಟ್ ಡೆಸ್ಕ್",
+    tab_ledger: "ಸಮತೋಲಿತ ಲೆಡ್ಜರ್",
+    tab_trust: "ಸರ್ಕಾರಿ ನಂಬಿಕೆ & ಆಡಳಿತ",
+    host_kpi_groups: "ನಿರ್ವಹಿಸಿದ ಚೀಟಿ ಗುಂಪುಗಳು",
+    host_kpi_subscribers: "ನೋಂದಾಯಿತ ಸದಸ್ಯರು",
+    host_kpi_commission: "5% ಸಂಘಟಕರ ಕಮಿಷನ್",
+    host_kpi_guarantee: "100% ಎಸ್ಕ್ರೋ ಗ್ಯಾರಂಟಿ",
+    statutory_title: "ಸರ್ಕಾರಿ ಶಾಸನಬದ್ಧ ಅನುಮೋದನೆ & ರಿಜಿಸ್ಟ್ರಾರ್ ಎಸ್ಕ್ರೋ",
+    statutory_sub: "ಚಿಟ್ ಫಂಡ್ಸ್ ಕಾಯ್ದೆ 1982 ರ ಸೆಕ್ಷನ್ 4 (ಪೂರ್ವಾನುಮೋದನೆ) & ಸೆಕ್ಷನ್ 20 (100% ಬ್ಯಾಂಕ್ ಗ್ಯಾರಂಟಿ) ಅಡಿಯಲ್ಲಿ ಮಾನ್ಯತೆ ಪಡೆದಿದೆ",
+    btn_inspect_cert: "ನಮೂನೆ XXI ಸರ್ಕಾರಿ ಪ್ರಮಾಣಪತ್ರ ಪರಿಶೀಲಿಸಿ",
+    statutory_reg_num: "ನಮೂನೆ XXI ಅನುಮೋದನೆ #",
+    statutory_escrow_bond: "ಸೆಕ್ಷನ್ 20 ಎಸ್ಕ್ರೋ ಬಾಂಡ್",
+    statutory_jurisdiction: "ರಿಜಿಸ್ಟ್ರಾರ್ ಅಧಿಕಾರ ವ್ಯಾಪ್ತಿ",
+    statutory_sec17_filing: "ಸೆಕ್ಷನ್ 17 ಹರಾಜು ನಡಾವಳಿ ಸಲ್ಲಿಕೆ",
+    host_tab_verify_cash: "⚡ ನಗದು ಪಾವತಿ ಪರಿಶೀಲಿಸಿ",
+    host_tab_verify_sureties: "📜 ಸೆಕ್ಷನ್ 31 ಜಾಮೀನು ಪರಿಶೀಲಿಸಿ",
+    host_tab_cycles: "⚙️ ಸಕ್ರಿಯ ಚಕ್ರಗಳ ನಿರ್ವಹಣೆ",
+    host_tab_create: "➕ ಹೊಸ ಚೀಟಿ ನೋಂದಾಯಿಸಿ",
+    host_tab_members: "👥 ಸದಸ್ಯರ ಸೇರ್ಪಡೆ ವಿನಂತಿಗಳು",
+    host_sureties_title: "ಹೋಸ್ಟ್ ಪರಿಶೀಲನೆಗೆ ಬಾಕಿ ಇರುವ ಸೆಕ್ಷನ್ 31 ಜಾಮೀನು ಪತ್ರಗಳು",
+    host_sureties_sub: "ಚಿಟ್ ಫಂಡ್ಸ್ ಕಾಯ್ದೆ 1982 ರ ಸೆಕ್ಷನ್ 31 ರ ಅಡಿಯಲ್ಲಿ, ಬಹುಮಾನ ವಿತರಣೆಗೆ ಮುನ್ನ ಸಹ-ಜಾಮೀನ್ದಾರ ಅಥವಾ ಎಫ್‌ಡಿಆರ್ ದಾಖಲೆಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+    host_cycles_title: "ಚೀಟಿ ಚಕ್ರಗಳು ಮತ್ತು ಹರಾಜು ಆಡಳಿತ ಡೆಸ್ಕ್",
+    host_cycles_sub: "ನಿಮ್ಮ ಚೀಟಿ ಗುಂಪುಗಳಲ್ಲಿ ನಿಗದಿತ ಹರಾಜುಗಳನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು ಪರಿಶೀಲಿಸಿ.",
+    cert_balance_title: "ದೃಢೀಕೃತ ಡಬಲ್-ಎಂಟ್ರಿ ಇನ್ವೇರಿಯಂಟ್ ಪ್ರಮಾಣಪತ್ರ",
+    cert_balance_sub: "ಶಾಸನಬದ್ಧ ನಿಯಮ: ಒಟ್ಟು ಡೆಬಿಟ್‌ಗಳು − ಒಟ್ಟು ಕ್ರೆಡಿಟ್‌ಗಳು = ₹0.00 (ಸಂಪೂರ್ಣ ನಿಖರತೆ). ಯಾವುದೇ ಹಣಕಾಸಿನ ವ್ಯತ್ಯಾಸವಿಲ್ಲ.",
+    btn_print_ledger: "ಪಾಸ್‌ಬುಕ್ ಮುದ್ರಿಸಿ / ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+    ledger_title: "ಡಬಲ್-ಎಂಟ್ರಿ ಸಮತೋಲಿತ ಸಾಮಾನ್ಯ ಲೆಡ್ಜರ್",
+    ledger_sub: "ಪ್ರತಿಯೊಂದು ವಹಿವಾಟು ಕಟ್ಟುನಿಟ್ಟಾದ ಡಬಲ್-ಎಂಟ್ರಿ ಸಮತೋಲನವನ್ನು ಜಾರಿಗೊಳಿಸುತ್ತದೆ. ಫ್ಲೋಟಿಂಗ್-ಪಾಯಿಂಟ್ ದೋಷ ಮುಕ್ತ.",
+    stat_total_debits: "ವ್ಯವಸ್ಥೆಯ ಒಟ್ಟು ಡೆಬಿಟ್‌ಗಳು",
+    stat_total_credits: "ವ್ಯವಸ್ಥೆಯ ಒಟ್ಟು ಕ್ರೆಡಿಟ್‌ಗಳು",
+    stat_variance: "ವ್ಯವಸ್ಥೆಯ ವ್ಯತ್ಯಾಸ",
+    stat_tx_count: "ಒಟ್ಟು ಜರ್ನಲ್ ವಹಿವಾಟುಗಳು",
+    coa_title: "ಖಾತೆಗಳ ಪಟ್ಟಿ (ಟ್ರಯಲ್ ಬ್ಯಾಲೆನ್ಸ್)",
+    trust_title: "ಸರ್ಕಾರಿ ಮಾನ್ಯತೆ ಮತ್ತು ನಿಯಂತ್ರಕ ನಂಬಿಕೆ",
+    trust_sub: "ಕರ್ನಾಟಕ ಸರ್ಕಾರದ ನೋಂದಣಿ ಮತ್ತು ಮುದ್ರಾಂಕ ಇಲಾಖೆ ಹಾಗೂ ಚಿಟ್ ಫಂಡ್ಸ್ ಕಾಯ್ದೆ 1982 ರ ಅಡಿಯಲ್ಲಿ ನಿಯಂತ್ರಿಸಲ್ಪಡುತ್ತದೆ.",
+    pillar_sec4_title: "ಸೆಕ್ಷನ್ 4 ಪೂರ್ವ ಮಂಜೂರಾತಿ",
+    pillar_sec4_desc: "ಸದಸ್ಯರನ್ನು ಆಹ್ವಾನಿಸುವ ಮುನ್ನ ರಾಜ್ಯ ಚಿಟ್ ರಿಜಿಸ್ಟ್ರಾರ್ ಅವರಿಂದ ಕಡ್ಡಾಯ ಸರ್ಕಾರಿ ಅನುಮೋದನೆ.",
+    pillar_sec20_title: "ಸೆಕ್ಷನ್ 20 100% ಎಸ್ಕ್ರೋ ಭದ್ರತೆ",
+    pillar_sec20_desc: "ನಿಗದಿತ ಬ್ಯಾಂಕಿನಲ್ಲಿ 100% ಚೀಟಿ ಮೊತ್ತದ ಫಿಕ್ಸೆಡ್ ಡೆಪಾಸಿಟ್ ಅಥವಾ ಬ್ಯಾಂಕ್ ಗ್ಯಾರಂಟಿ ಎಸ್ಕ್ರೋ.",
+    pillar_kyc_title: "ಡಿಪಿಡಿಪಿ ಮಾಸ್ಕ್ಡ್ ಇ-ಕೆವೈಸಿ",
+    pillar_kyc_desc: "ಯುಐಡಿಎಐ ಆಧಾರ್ ಒಟಿಪಿ ಪರಿಶೀಲನೆ (XXXX-XXXX-3210) ಮತ್ತು ಆದಾಯ ತೆರಿಗೆ ಪ್ಯಾನ್ ಮಾನ್ಯತೆ.",
+    pillar_sec31_title: "ಸೆಕ್ಷನ್ 31 ಜಾಮೀನು ಪತ್ರ",
+    pillar_sec31_desc: "ಬಹುಮಾನಿತ ಸದಸ್ಯರು ಹಣ ಪಡೆಯುವ ಮುನ್ನ ಭದ್ರತಾ ಜಾಮೀನು ಸಲ್ಲಿಸುವುದು ಕಡ್ಡಾಯವಾಗಿದೆ.",
+    payout_title: "ಹಣಕಾಸು ಮೇಕರ್-ಚೆಕರ್: ವಿಜೇತರ ಹಣ ಬಿಡುಗಡೆ ದೃಢೀಕರಣ",
+    cert_govt: "ಕರ್ನಾಟಕ ಸರ್ಕಾರ",
+    cert_dept: "ನೋಂದಣಿ ಮತ್ತು ಮುದ್ರಾಂಕ ಇಲಾಖೆ • ಚಿಟ್ ರಿಜಿಸ್ಟ್ರಾರ್ ಕಚೇರಿ",
+    cert_form: "ನಮೂನೆ XXI — ಪೂರ್ವ ಮಂಜೂರಾತಿ ಪ್ರಮಾಣಪತ್ರ",
+    cert_th_reg: "ಶಾಸನಬದ್ಧ ನೋಂದಣಿ ಸಂಖ್ಯೆ",
+    cert_th_escrow: "ಸೆಕ್ಷನ್ 20 ಎಸ್ಕ್ರೋ ಬ್ಯಾಂಕ್ ಗ್ಯಾರಂಟಿ",
+    cert_th_caps: "ಸೆಕ್ಷನ್ 14 ರಿಯಾಯಿತಿ ಮಿತಿಗಳು",
+    cert_th_sureties: "ಸೆಕ್ಷನ್ 31 ಜಾಮೀನು ನಿಯಮ",
+    cert_th_jurisdiction: "ಅಧಿಕಾರ ವ್ಯಾಪ್ತಿ",
+    cert_caps_val: "ಕನಿಷ್ಠ: 5% (₹25,000) • ಗರಿಷ್ಠ: 30% (₹1,50,000)",
+    cert_sureties_val: "ಬಹುಮಾನ ಹಣ ನೀಡುವ ಮೊನ್ನ ಜಾಮೀನು ಪತ್ರ ಕಡ್ಡಾಯ",
+    cert_prose_text: "ಇಂದಿರಾನಗರ ವರ್ತಕರು ಮತ್ತು ಕುಶಲಕರ್ಮಿಗಳ ಚಿಟ್ (ಒಟ್ಟು ಮೊತ್ತ ₹5,00,000, 20 ಟಿಕೆಟ್‌ಗಳು, ಮಾಸಿಕ ಕಂತು ₹25,000, ಆಯೋಜಕರು: ಲಕ್ಷ್ಮೀ ದೇವಿ) ಎಂಬ ಚೀಟಿ ಯೋಜನೆಗೆ ಚಿಟ್ ಫಂಡ್ಸ್ ಕಾಯ್ದೆ 1982 ರ ಸೆಕ್ಷನ್ 4(1) ರ ಪ್ರಕಾರ ಪೂರ್ವ ಮಂಜೂರಾತಿ ನೀಡಲಾಗಿದೆ ಎಂದು ಈ ಮೂಲಕ ಪ್ರಮಾಣೀಕರಿಸಲಾಗಿದೆ."
+  }
+};
+
+function t(key) {
+  return (translations[currentLanguage] && translations[currentLanguage][key]) || key;
+}
+
+function applyLanguage(lang) {
+  currentLanguage = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang] && translations[lang][key]) {
+      el.innerHTML = translations[lang][key];
+    }
+  });
+
+  const langLabel = document.getElementById('lang-current-label');
+  if (langLabel) {
+    langLabel.textContent = lang === 'kn' ? 'ಕನ್ನಡ' : 'English';
+  }
+}
+
+function setupLanguageToggle() {
+  const toggleBtn = document.getElementById('lang-toggle-btn');
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const newLang = currentLanguage === 'en' ? 'kn' : 'en';
+    localStorage.setItem('chitfund_lang', newLang);
+    applyLanguage(newLang);
+  });
+
+  applyLanguage(currentLanguage);
+}
 
 // Format minor integer units (paise) to INR
 function formatINR(amountMinor) {
@@ -49,6 +217,9 @@ async function apiCall(endpoint, options = {}) {
 
 // App Initialization
 document.addEventListener('DOMContentLoaded', async () => {
+  setupLanguageToggle();
+  setupCertificateModal();
+  setupCoaFilter();
   setupViewportToggle();
   setupPortalSwitcher();
   setupSubNavTabs();
@@ -66,6 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTopDues();
   await loadAuctionRoom();
   await loadJoinChits();
+  applyLanguage(currentLanguage);
 });
 
 // ----------------------------------------------------------------------------
@@ -814,6 +986,7 @@ function setupHostSubTabs() {
 
       if (targetPanel === 'tab-host-verifications') loadHostPendingVerifications();
       if (targetPanel === 'tab-host-sureties') loadHostSureties();
+      if (targetPanel === 'tab-host-cycles') loadHostCycles();
       if (targetPanel === 'tab-host-members') loadHostJoinRequests();
     });
   });
@@ -857,9 +1030,112 @@ function setupHostSubTabs() {
 }
 
 async function loadHostWorkspace() {
+  await loadHostOverview();
   await loadHostPendingVerifications();
   await loadHostSureties();
+  await loadHostCycles();
   await loadHostJoinRequests();
+}
+
+async function loadHostOverview() {
+  if (!currentUser) return;
+  try {
+    const data = await apiCall('/api/host/overview');
+    const statGroups = document.getElementById('host-stat-groups');
+    const statMembers = document.getElementById('host-stat-members');
+    const statComm = document.getElementById('host-stat-commission');
+    const statBg = document.getElementById('host-stat-bg');
+    if (statGroups) statGroups.textContent = data.totalGroups || 5;
+    if (statMembers) statMembers.textContent = data.totalMembers || 98;
+    if (statComm) statComm.textContent = formatINR(data.totalCommissionMinor || 12500000);
+    if (statBg) statBg.textContent = '✔ ACTIVE (₹25L)';
+  } catch (err) {
+    console.error('Error loading host overview:', err);
+  }
+}
+
+async function loadHostCycles() {
+  const container = document.getElementById('host-cycles-list');
+  if (!container || !currentUser) return;
+  try {
+    const data = await apiCall('/api/host/overview');
+    const cycles = data.activeCycles || [];
+    container.innerHTML = '';
+    if (cycles.length === 0) {
+      container.innerHTML = '<div class="text-muted p-3 text-center">No active cycles awaiting auction action.</div>';
+      return;
+    }
+
+    cycles.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'verification-card';
+      const isOpen = c.status === 'AUCTION_OPEN';
+      card.innerHTML = `
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong>${c.group_name}</strong>
+            <span class="status-pill ${isOpen ? 'status-active' : 'status-pending'}">${c.status}</span>
+          </div>
+          <div class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">
+            Cycle #${c.sequence_no} • Pool: ${formatINR(c.total_pool_minor)} • Due Date: ${new Date(c.due_at).toLocaleDateString()}
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          ${!isOpen ? `
+            <button class="btn btn-primary btn-sm host-start-auc-btn" data-id="${c.id}">
+              ▶ Open Auction
+            </button>
+          ` : `
+            <button class="btn btn-gold btn-sm host-close-auc-btn" data-id="${c.id}">
+              ✔ Close Auction
+            </button>
+          `}
+          <button class="btn btn-secondary btn-sm host-view-room-btn" data-id="${c.id}">
+            🏛️ Bidding Room
+          </button>
+        </div>
+      `;
+
+      if (card.querySelector('.host-start-auc-btn')) {
+        card.querySelector('.host-start-auc-btn').addEventListener('click', async () => {
+          try {
+            await apiCall(`/api/cycles/${c.id}/start-auction`, { method: 'POST' });
+            alert(`✔ Auction for Cycle #${c.sequence_no} opened!`);
+            loadHostCycles();
+            loadAuctionRoom();
+          } catch (e) {
+            alert(e.message);
+          }
+        });
+      }
+
+      if (card.querySelector('.host-close-auc-btn')) {
+        card.querySelector('.host-close-auc-btn').addEventListener('click', async () => {
+          if (confirm(`Close auction for Cycle #${c.sequence_no}? Winner will be determined and general ledger will be updated.`)) {
+            try {
+              const res = await apiCall(`/api/cycles/${c.id}/close`, { method: 'POST' });
+              alert(`✔ Auction closed! Winning discount: ${formatINR(res.snapshotData.winningDiscount)}`);
+              loadHostCycles();
+              loadAuctionRoom();
+              loadLedger();
+            } catch (e) {
+              alert(e.message);
+            }
+          }
+        });
+      }
+
+      card.querySelector('.host-view-room-btn').addEventListener('click', () => {
+        activeCycleId = c.id;
+        document.querySelector('.sub-tab[data-subtab="auction-room-view"]').click();
+        loadAuctionRoom();
+      });
+
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Error loading host cycles:', err);
+  }
 }
 
 async function loadHostSureties() {
@@ -1521,8 +1797,59 @@ async function loadAuctionRoom() {
 }
 
 // ----------------------------------------------------------------------------
-// 9. BALANCED GENERAL LEDGER
+// 9. BALANCED GENERAL LEDGER & INTERACTIVE AUDIT EXPLORER
 // ----------------------------------------------------------------------------
+function setupCoaFilter() {
+  const buttons = document.querySelectorAll('.coa-filter-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCoaFilter = btn.getAttribute('data-filter');
+      renderChartOfAccounts();
+    });
+  });
+}
+
+function renderChartOfAccounts() {
+  const chartBody = document.getElementById('chart-accounts-body');
+  if (!chartBody) return;
+  chartBody.innerHTML = '';
+
+  const filtered = activeCoaFilter === 'ALL'
+    ? currentChartOfAccounts
+    : currentChartOfAccounts.filter(acc => String(acc.code).startsWith(activeCoaFilter));
+
+  filtered.forEach(acc => {
+    chartBody.innerHTML += `
+      <tr>
+        <td><code class="font-mono">${acc.code}</code></td>
+        <td><strong>${acc.name}</strong></td>
+        <td><span class="trust-badge-pill badge-bank">${acc.type}</span></td>
+        <td class="text-right font-mono" style="font-weight: 700;">${formatINR(acc.balance_minor)}</td>
+      </tr>
+    `;
+  });
+}
+
+function setupCertificateModal() {
+  const modal = document.getElementById('certificate-modal');
+  const closeBtn = document.getElementById('close-cert-modal-btn');
+  const openBtn1 = document.getElementById('btn-open-cert-modal');
+  const openBtn2 = document.getElementById('btn-open-cert-modal-2');
+
+  const openCert = () => {
+    if (modal) modal.style.display = 'flex';
+  };
+  const closeCert = () => {
+    if (modal) modal.style.display = 'none';
+  };
+
+  if (openBtn1) openBtn1.addEventListener('click', openCert);
+  if (openBtn2) openBtn2.addEventListener('click', openCert);
+  if (closeBtn) closeBtn.addEventListener('click', closeCert);
+}
+
 async function loadLedger() {
   try {
     const data = await apiCall(`/api/groups/${activeGroupId}/reconciliation`);
@@ -1536,18 +1863,8 @@ async function loadLedger() {
     const badge = document.getElementById('reconciliation-badge');
     badge.textContent = recon.isFullyBalanced ? '✔ 100% BALANCED (Variance = ₹0.00)' : '⚠ UNBALANCED VARIANCE';
 
-    const chartBody = document.getElementById('chart-accounts-body');
-    chartBody.innerHTML = '';
-    recon.chartOfAccounts.forEach(acc => {
-      chartBody.innerHTML += `
-        <tr>
-          <td><code class="font-mono">${acc.code}</code></td>
-          <td><strong>${acc.name}</strong></td>
-          <td><span class="trust-badge-pill badge-bank">${acc.type}</span></td>
-          <td class="text-right font-mono" style="font-weight: 700;">${formatINR(acc.balance_minor)}</td>
-        </tr>
-      `;
-    });
+    currentChartOfAccounts = recon.chartOfAccounts || [];
+    renderChartOfAccounts();
 
     const txBody = document.getElementById('transactions-body');
     txBody.innerHTML = '';

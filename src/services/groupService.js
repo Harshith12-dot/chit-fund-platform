@@ -230,3 +230,51 @@ export function getAllGroups(db = null) {
     ORDER BY g.created_at DESC
   `).all();
 }
+
+export function getHostOverview(organizerId, db = null) {
+  const database = db || getDatabase();
+  const groups = database.prepare(`
+    SELECT g.*, l.name as locality_name, l.city as locality_city
+    FROM chit_groups g
+    JOIN localities l ON g.locality_id = l.id
+    WHERE g.organizer_id = ?
+    ORDER BY g.created_at DESC
+  `).all(organizerId);
+
+  const totalGroups = groups.length;
+  let totalMembers = 0;
+  let totalCommissionMinor = 0;
+  const groupIds = groups.map(g => g.id);
+  let activeCycles = [];
+
+  if (groupIds.length > 0) {
+    const placeholders = groupIds.map(() => '?').join(',');
+    const memCountRow = database.prepare(`
+      SELECT COUNT(*) as count FROM group_memberships WHERE group_id IN (${placeholders}) AND status = 'ACTIVE'
+    `).get(...groupIds);
+    totalMembers = memCountRow ? memCountRow.count : 0;
+
+    const commRow = database.prepare(`
+      SELECT SUM(organizer_commission_minor) as total_comm
+      FROM chit_cycles
+      WHERE group_id IN (${placeholders}) AND status IN ('AUCTION_CLOSED', 'SETTLED')
+    `).get(...groupIds);
+    totalCommissionMinor = commRow && commRow.total_comm ? commRow.total_comm : 0;
+
+    activeCycles = database.prepare(`
+      SELECT c.*, g.name as group_name, g.total_pool_minor, g.max_bid_discount_minor
+      FROM chit_cycles c
+      JOIN chit_groups g ON c.group_id = g.id
+      WHERE g.organizer_id = ? AND c.status IN ('SCHEDULED', 'AUCTION_OPEN', 'AUCTION_ACTIVE')
+      ORDER BY c.sequence_no ASC
+    `).all(organizerId);
+  }
+
+  return {
+    totalGroups,
+    totalMembers,
+    totalCommissionMinor,
+    groups,
+    activeCycles
+  };
+}
