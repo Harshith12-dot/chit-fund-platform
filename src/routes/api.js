@@ -11,6 +11,8 @@ import * as payoutService from '../services/payoutService.js';
 import * as disputeService from '../services/disputeService.js';
 import * as communicationService from '../services/communicationService.js';
 import * as auditService from '../services/auditService.js';
+import * as suretyService from '../services/suretyService.js';
+import * as portfolioService from '../services/portfolioService.js';
 import { seedDatabase } from '../seed/seedData.js';
 
 // Route matching helper
@@ -182,6 +184,12 @@ export async function handleApiRequest(req, res) {
       return json({ success: true, users });
     }
 
+    if (method === 'GET' && pathname === '/api/portfolio') {
+      if (!currentUser) return error('Unauthorized', 401);
+      const portfolio = portfolioService.getUserPortfolio(currentUser.id);
+      return json({ success: true, ...portfolio });
+    }
+
     // ------------------------------------------------------------------------
     // LOCALITIES & NEARBY DISCOVERY
     // ------------------------------------------------------------------------
@@ -324,6 +332,31 @@ export async function handleApiRequest(req, res) {
       });
     }
 
+    params = matchRoute('/api/cycles/:id/bidding-room', pathname);
+    if (method === 'GET' && params) {
+      const state = auctionService.getBiddingRoomState({
+        cycleId: params.id,
+        userId: currentUser ? currentUser.id : null
+      });
+      return json({ success: true, ...state });
+    }
+
+    params = matchRoute('/api/cycles/:id/simulate-competitor-bid', pathname);
+    if (method === 'POST' && params) {
+      const bid = auctionService.simulateCompetitorBid({ cycleId: params.id });
+      return json({ success: true, bid });
+    }
+
+    params = matchRoute('/api/cycles/:id/lottery', pathname);
+    if (method === 'POST' && params) {
+      if (!currentUser) return error('Unauthorized', 401);
+      const result = auctionService.drawAuctionLottery({
+        cycleId: params.id,
+        drawnByUserId: currentUser.id
+      });
+      return json({ success: true, ...result });
+    }
+
     // ------------------------------------------------------------------------
     // PAYMENTS & OBLIGATIONS
     // ------------------------------------------------------------------------
@@ -379,6 +412,45 @@ export async function handleApiRequest(req, res) {
         hostUserId: currentUser.id
       });
       return json(result);
+    }
+
+    // ------------------------------------------------------------------------
+    // SURETIES & GUARANTEES (SECTION 31)
+    // ------------------------------------------------------------------------
+    if (method === 'POST' && pathname === '/api/sureties') {
+      if (!currentUser) return error('Unauthorized', 401);
+      const body = await readBody();
+      const surety = suretyService.submitSurety({
+        payoutId: body.payoutId,
+        cycleId: body.cycleId,
+        membershipId: body.membershipId,
+        userId: currentUser.id,
+        suretyType: body.suretyType || 'CO_GUARANTOR',
+        guarantorName: body.guarantorName,
+        guarantorPhone: body.guarantorPhone,
+        guarantorIdMasked: body.guarantorIdMasked || 'XXXX-XXXX-8899',
+        documentRef: body.documentRef || 'DOC-BOND-' + Date.now()
+      });
+      return json({ success: true, surety });
+    }
+
+    if (method === 'GET' && pathname === '/api/host/pending-sureties') {
+      if (!currentUser) return error('Unauthorized', 401);
+      const sureties = suretyService.getPendingSuretiesForHost(currentUser.id);
+      return json({ success: true, sureties });
+    }
+
+    params = matchRoute('/api/host/verify-surety/:id', pathname);
+    if (method === 'POST' && params) {
+      if (!currentUser) return error('Unauthorized', 401);
+      const body = await readBody();
+      const verified = suretyService.verifySurety({
+        suretyId: params.id,
+        hostUserId: currentUser.id,
+        approved: body.approved !== false,
+        rejectionReason: body.rejectionReason
+      });
+      return json({ success: true, surety: verified });
     }
 
     params = matchRoute('/api/payments/webhooks/:provider', pathname);

@@ -79,7 +79,10 @@ export function resetDatabaseForTest() {
   db.prepare(`
     INSERT INTO localities (id, name, parent_id, city, state, latitude, longitude, pincode, created_at)
     VALUES ('loc-1', 'Indiranagar', NULL, 'Bengaluru', 'Karnataka', 12.9784, 77.6408, '560038', '2026-10-25T00:00:00.000Z'),
-           ('loc-2', 'Koramangala', NULL, 'Bengaluru', 'Karnataka', 12.9352, 77.6245, '560034', '2026-10-25T00:00:00.000Z')
+           ('loc-2', 'Koramangala', NULL, 'Bengaluru', 'Karnataka', 12.9352, 77.6245, '560034', '2026-10-25T00:00:00.000Z'),
+           ('loc-3', 'HSR Layout', NULL, 'Bengaluru', 'Karnataka', 12.9121, 77.6446, '560102', '2026-10-25T00:00:00.000Z'),
+           ('loc-4', 'Jayanagar', NULL, 'Bengaluru', 'Karnataka', 12.9308, 77.5838, '560041', '2026-10-25T00:00:00.000Z'),
+           ('loc-5', 'Whitefield', NULL, 'Bengaluru', 'Karnataka', 12.9698, 77.7500, '560066', '2026-10-25T00:00:00.000Z')
   `).run();
 
   instance = db;

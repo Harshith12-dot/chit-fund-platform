@@ -1157,3 +1157,286 @@ body {
   border-radius: var(--radius-sm);
   margin-top: 8px;
 }
+
+/* ==========================================================================
+   ENHANCED LIVE AUCTION ARENA & REAL-TIME BIDDING STYLES
+   ========================================================================== */
+.auction-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.auction-selector-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auction-selector-select {
+  padding: 8px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--primary-navy);
+  background: #F8FAFC;
+}
+
+.auction-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #0B2545;
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(11, 37, 69, 0.25);
+}
+
+.pulse-red-dot {
+  width: 9px;
+  height: 9px;
+  background: #EF4444;
+  border-radius: 50%;
+  animation: pulse-red 1.2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.quick-bid-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.btn-quick-bid {
+  background: #F1F5F9;
+  border: 1px solid var(--border-color);
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--primary-navy);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.btn-quick-bid:hover {
+  background: #E2E8F0;
+  border-color: var(--secondary-blue);
+  color: var(--secondary-blue);
+}
+
+.btn-quick-bid.btn-cap {
+  background: #FEF8EC;
+  border-color: var(--accent-gold);
+  color: #9A6715;
+  font-weight: 800;
+}
+
+.btn-quick-bid.btn-cap:hover {
+  background: #FDEBC8;
+}
+
+.btn-simulate-competitor {
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-simulate-competitor:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.lottery-alert-card {
+  background: linear-gradient(135deg, #FEF8EC 0%, #FFF4DE 100%);
+  border: 2px solid var(--accent-gold);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.lottery-alert-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lottery-icon-badge {
+  font-size: 2rem;
+  background: #FFFFFF;
+  border: 1px solid var(--gold-border);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   MY CHIT PORTFOLIO STYLES
+   ========================================================================== */
+.portfolio-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.portfolio-stat-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.portfolio-stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.portfolio-stat-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--primary-navy);
+}
+
+.portfolio-chits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.portfolio-chit-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+
+.portfolio-chit-card:hover {
+  border-color: var(--secondary-blue);
+  box-shadow: var(--shadow-md);
+}
+
+.subscriber-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.subscriber-status-badge.non-prized {
+  background: #EFF6FF;
+  color: var(--secondary-blue);
+  border: 1px solid #BFDBFE;
+}
+
+.subscriber-status-badge.prized {
+  background: #FEF8EC;
+  color: #9A6715;
+  border: 1px solid var(--gold-border);
+}
+
+.ticket-slot-pill {
+  background: #0B2545;
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   SURETY VERIFICATION DESK STYLES
+   ========================================================================== */
+.sureties-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.surety-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.surety-card.approved {
+  border-color: var(--success-border);
+  background: #F0FDF4;
+}
+
+.surety-info-col {
+  flex: 1;
+  min-width: 250px;
+}
+
+.surety-badge {
+  display: inline-block;
+  background: #EFF6FF;
+  color: var(--secondary-blue);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}

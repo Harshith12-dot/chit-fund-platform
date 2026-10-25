@@ -9,7 +9,7 @@ export function seedDatabase(db = null) {
   // Clear existing data cleanly if re-seeding
   const tables = [
     'audit_events', 'notifications', 'messages', 'conversations', 'support_cases',
-    'delinquencies', 'ledger_entries', 'ledger_transactions', 'payouts', 'bids',
+    'delinquencies', 'ledger_entries', 'ledger_transactions', 'sureties', 'payouts', 'bids',
     'payment_intents', 'contribution_obligations', 'chit_cycles', 'group_memberships',
     'chit_groups', 'kyc_cases', 'user_consents', 'user_profiles', 'users', 'localities'
   ];
@@ -324,6 +324,117 @@ export function seedDatabase(db = null) {
       id, group_id, user_id, slot_number, role, status, has_won_auction, won_cycle_id, accepted_rules_version, joined_at
     ) VALUES ('mem-grp2-org', ?, 'usr-organizer-1', 1, 'ORGANIZER', 'ACTIVE', 0, NULL, '1.0', ?)
   `).run(grp2Id, now);
+
+  // Group 3: HSR Layout Retailers Working Capital Chit (₹2,00,000 Pool, Cycle 3 Live Auction)
+  const grp3Id = 'grp-hsr-retailers-2026';
+  database.prepare(`
+    INSERT INTO chit_groups (
+      id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
+      total_months, max_members, current_members_count, organizer_commission_rate,
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
+    ) VALUES (?, 'usr-organizer-1', 'loc-3', 'HSR Layout Retailers Working Capital Chit',
+      20000000, 1000000, 20, 20, 4, 0.05, 1000000, 6000000, '1.0',
+      'KA/BLR/REG/2026/0554', 'BG-AXIS-882190', 99.1, 'ACTIVE', ?)
+  `).run(grp3Id, now);
+
+  // Memberships for Group 3 (Ramesh holds Ticket #7, Suresh holds Ticket #2, Anand holds Ticket #5)
+  const grp3Members = [
+    { id: 'mem-g3-org', userId: 'usr-organizer-1', slot: 1, role: 'ORGANIZER', hasWon: 1 },
+    { id: 'mem-g3-suresh', userId: 'usr-member-3', slot: 2, role: 'MEMBER', hasWon: 0 },
+    { id: 'mem-g3-anand', userId: 'usr-collector-1', slot: 5, role: 'MEMBER', hasWon: 0 },
+    { id: 'mem-g3-ramesh', userId: 'usr-member-1', slot: 7, role: 'MEMBER', hasWon: 0 }
+  ];
+  for (const m of grp3Members) {
+    insertMem.run(m.id, grp3Id, m.userId, m.slot, m.role, m.hasWon, m.hasWon ? 'cyc-g3-1' : null, now);
+  }
+
+  // Group 3, Cycle 3 is AUCTION_ACTIVE
+  const cyc3G3Id = 'cyc-g3-3';
+  database.prepare(`
+    INSERT INTO chit_cycles (id, group_id, sequence_no, due_at, auction_at, status, created_at)
+    VALUES (?, ?, 3, ?, ?, 'AUCTION_ACTIVE', ?)
+  `).run(cyc3G3Id, grp3Id, now, now, now);
+
+  // Obligations for Group 3 Cycle 3 (Ramesh owes ₹10,000)
+  for (const m of grp3Members) {
+    database.prepare(`
+      INSERT INTO contribution_obligations (
+        id, cycle_id, membership_id, base_amount_minor, dividend_deduction_minor,
+        penalty_minor, net_payable_minor, amount_paid_minor, due_at, status
+      ) VALUES (?, ?, ?, 1000000, 0, 0, 1000000, 0, ?, 'PENDING')
+    `).run(`obl-g3c3-${m.id}`, cyc3G3Id, m.id, now);
+  }
+
+  // Live bids in Group 3 Cycle 3
+  database.prepare(`
+    INSERT INTO bids (id, cycle_id, membership_id, bid_discount_minor, submitted_at, status, is_winning)
+    VALUES
+    ('bid-g3-1', ?, 'mem-g3-suresh', 1800000, ?, 'OUTBID', 0),
+    ('bid-g3-2', ?, 'mem-g3-anand', 2200000, ?, 'VALID', 0)
+  `).run(cyc3G3Id, now, cyc3G3Id, now);
+
+  // Group 4: Whitefield Domestic Helpers & Artisans Micro-Chit (₹50,000 Pool)
+  const grp4Id = 'grp-whitefield-micro-2026';
+  database.prepare(`
+    INSERT INTO chit_groups (
+      id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
+      total_months, max_members, current_members_count, organizer_commission_rate,
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
+    ) VALUES (?, 'usr-organizer-1', 'loc-5', 'Whitefield Women Artisans Micro-Chit',
+      5000000, 500000, 10, 10, 7, 0.05, 250000, 1500000, '1.0',
+      'KA/BLR/REG/2026/0991', 'BG-SBI-110022', 97.6, 'REGISTRATION', ?)
+  `).run(grp4Id, now);
+
+  // Group 5: Jayanagar Family Wealth & Savings Chit (₹10,00,000 Pool, Cycle 5 Settled with Surety)
+  const grp5Id = 'grp-jayanagar-wealth-2026';
+  database.prepare(`
+    INSERT INTO chit_groups (
+      id, organizer_id, locality_id, name, total_pool_minor, monthly_contribution_minor,
+      total_months, max_members, current_members_count, organizer_commission_rate,
+      min_bid_discount_minor, max_bid_discount_minor, constitution_version,
+      host_license_number, bank_guarantee_ref, trust_score, status, created_at
+    ) VALUES (?, 'usr-organizer-1', 'loc-4', 'Jayanagar Family Wealth & Savings Chit',
+      100000000, 4000000, 25, 25, 3, 0.05, 5000000, 30000000, '1.0',
+      'KA/BLR/REG/2026/0122', 'BG-CANARA-778811', 99.5, 'ACTIVE', ?)
+  `).run(grp5Id, now);
+
+  // Priya Sharma (usr-member-2) has slot 14 in Jayanagar chit, won Cycle 5
+  const memG5Priya = 'mem-g5-priya';
+  insertMem.run(memG5Priya, grp5Id, 'usr-member-2', 14, 'MEMBER', 1, 'cyc-g5-5', now);
+
+  const cycG5Id = 'cyc-g5-5';
+  database.prepare(`
+    INSERT INTO chit_cycles (
+      id, group_id, sequence_no, due_at, auction_at, status,
+      winner_membership_id, winning_bid_discount_minor, dividend_per_member_minor,
+      organizer_commission_minor, payout_amount_minor, result_signature, created_at
+    ) VALUES (?, ?, 5, ?, ?, 'AUCTION_CLOSED', ?, 18000000, 520000, 5000000, 82000000, 'DEMO-SIG-JAYA-C5', ?)
+  `).run(cycG5Id, grp5Id, now, now, memG5Priya, now);
+
+  // Create Payout Record for Priya
+  const payoutG5Id = 'pay-c5-priya';
+  database.prepare(`
+    INSERT INTO payouts (
+      id, cycle_id, winner_membership_id, beneficiary_user_id,
+      gross_amount_minor, commission_deducted_minor, net_payout_minor,
+      bank_account_masked, ifsc_code, approval_status
+    ) VALUES (?, ?, ?, 'usr-member-2', 100000000, 5000000, 82000000, 'XXXX-4567', 'SBIN0004567', 'PENDING_APPROVAL')
+  `).run(payoutG5Id, cycG5Id, memG5Priya);
+
+  // Seed Pending Surety submitted by Priya under Section 31
+  database.prepare(`
+    INSERT INTO sureties (
+      id, payout_id, cycle_id, membership_id, user_id,
+      surety_type, guarantor_name, guarantor_phone, guarantor_id_masked,
+      document_ref, status, submitted_at
+    ) VALUES (
+      'sur-seed-priya-1', ?, ?, ?, 'usr-member-2',
+      'CO_GUARANTOR', 'Dr. Sunita Rao', '9876543250', 'XXXX-XXXX-7788',
+      'DOC-INDEMNITY-BOND-2026-KA-BLR', 'PENDING_HOST_APPROVAL', ?
+    )
+  `).run(payoutG5Id, cycG5Id, memG5Priya, now);
 
   // Seed Conversations & Initial Messages
   const conv1Id = 'cnv-grp1';

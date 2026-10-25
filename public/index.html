@@ -81,14 +81,22 @@
         <div class="app-screen">
           <!-- Secondary Navigation Tabs -->
           <nav class="sub-nav-tabs">
-            <button class="sub-tab active" data-subtab="main-portal-view">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span id="nav-primary-label">Explore Chits</span>
-            </button>
-            <button class="sub-tab" data-subtab="auction-room-view">
+            <button class="sub-tab active" data-subtab="auction-room-view">
               <span class="pulse-indicator"></span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 7 3 3m-7.5 7.5L5 22l4.5-4.5m0 0 7.5-7.5L14 7 6.5 14.5z"/></svg>
-              <span>Live Auction</span>
+              <span>Live Auction Arena</span>
+            </button>
+            <button class="sub-tab" data-subtab="portfolio-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>My Portfolio</span>
+            </button>
+            <button class="sub-tab" data-subtab="main-portal-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              <span id="nav-primary-label">Explore Chits</span>
+            </button>
+            <button class="sub-tab" data-subtab="host-chit-portal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4"/></svg>
+              <span>Host Desk</span>
             </button>
             <button class="sub-tab" data-subtab="ledger-view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="13" y2="12"/></svg>
@@ -101,14 +109,45 @@
           </nav>
 
           <div class="screen-scrollable">
+            <!-- TOP DUE BANNER: "Get the due at top" (Always visible on all views!) -->
+            <section class="due-banner-container" id="top-dues-section">
+              <!-- Injected via JavaScript from /api/me/dues -->
+            </section>
+
             <!-- ========================================================== -->
-            <!-- 1. JOIN CHIT PORTAL (MEMBER VIEW)                          -->
+            <!-- 0. MY CHIT PORTFOLIO VIEW                                 -->
             <!-- ========================================================== -->
-            <div id="join-chit-portal" class="portal-section active-portal">
-              <!-- TOP DUE BANNER: "Get the due at top" -->
-              <section class="due-banner-container" id="top-dues-section">
-                <!-- Injected via JavaScript from /api/me/dues -->
-              </section>
+            <div id="portfolio-view" class="portal-section" style="display: none;">
+              <div class="portal-headline mb-3">
+                <h2>My Multi-Chit Portfolio</h2>
+                <p class="portal-sub">Consolidated dashboard for all your enrolled chits, assigned ticket slots, dividends earned, and prize status.</p>
+              </div>
+
+              <!-- Top Portfolio KPI Metrics -->
+              <div class="portfolio-stats-grid">
+                <div class="portfolio-stat-card">
+                  <div class="portfolio-stat-label">Active Chits Enrolled</div>
+                  <div class="portfolio-stat-value text-primary" id="pf-total-chits">0</div>
+                </div>
+                <div class="portfolio-stat-card">
+                  <div class="portfolio-stat-label">Total Subscribed Capital</div>
+                  <div class="portfolio-stat-value text-primary" id="pf-total-capital">₹0</div>
+                </div>
+                <div class="portfolio-stat-card">
+                  <div class="portfolio-stat-label">Lifetime Dividends Earned</div>
+                  <div class="portfolio-stat-value text-success" id="pf-total-dividends">₹0</div>
+                </div>
+                <div class="portfolio-stat-card">
+                  <div class="portfolio-stat-label">Total Active Dues</div>
+                  <div class="portfolio-stat-value text-danger" id="pf-total-dues">₹0</div>
+                </div>
+              </div>
+
+              <!-- Enrolled Chits Grid -->
+              <div id="portfolio-chits-container" class="portfolio-chits-grid">
+                <!-- Injected via JS -->
+              </div>
+            </div>
 
               <!-- Discovery & Filter Header -->
               <section class="portal-header-section">
@@ -225,11 +264,15 @@
                 </div>
               </section>
 
-              <!-- HOST ACTION TABS: VERIFY PAYMENTS vs HOST NEW CHIT -->
+              <!-- HOST ACTION TABS: VERIFY PAYMENTS vs HOST NEW CHIT vs SURETIES -->
               <div class="host-action-tabs">
                 <button class="host-tab-btn active" data-hosttab="tab-host-verifications">
                   <span class="pending-alert-badge" id="host-pending-badge">1</span>
-                  ⚡ Verify Offline & Cash Payments
+                  ⚡ Verify Offline Payments
+                </button>
+                <button class="host-tab-btn" data-hosttab="tab-host-sureties">
+                  <span class="pending-alert-badge" id="host-surety-badge">1</span>
+                  📜 Verify Section 31 Sureties
                 </button>
                 <button class="host-tab-btn" data-hosttab="tab-host-create">
                   ➕ Register & Host New Chit
@@ -250,6 +293,22 @@
                   </div>
 
                   <div id="host-verifications-list" class="verifications-container">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- HOST SUB-PANEL 1B: PENDING SURETIES (SECTION 31) -->
+              <div id="tab-host-sureties" class="host-subpanel" style="display: none;">
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3>Prized Subscriber Sureties Pending Host Approval</h3>
+                      <p class="text-muted" style="font-size: 0.8rem;">Under Section 31 of Chit Funds Act 1982, inspect the Co-Guarantor, FDR lien, or Salary certificate before authorizing prize disbursal.</p>
+                    </div>
+                  </div>
+
+                  <div id="host-sureties-list" class="sureties-grid">
                     <!-- Injected via JavaScript -->
                   </div>
                 </div>
@@ -350,24 +409,62 @@
             <!-- 3. LIVE AUCTION ROOM VIEW                                  -->
             <!-- ========================================================== -->
             <div id="auction-room-view" class="portal-section" style="display: none;">
+              <!-- Auction Selector & Real-Time Countdown Header -->
+              <div class="auction-selector-bar">
+                <div class="auction-selector-left">
+                  <label for="auction-cycle-select" style="font-weight: 700; font-size: 0.85rem;">Active Chit Arena:</label>
+                  <select id="auction-cycle-select" class="auction-selector-select">
+                    <!-- Populated via JS -->
+                  </select>
+                </div>
+                <div class="auction-timer-pill">
+                  <span class="pulse-red-dot"></span>
+                  <span>ROUND CLOSES IN:</span>
+                  <span id="auction-countdown-clock" class="text-gold">00:03:45</span>
+                </div>
+              </div>
+
+              <!-- Tied Ceiling Alert (Lottery trigger) -->
+              <div id="tied-ceiling-alert" class="lottery-alert-card" style="display: none;">
+                <div class="lottery-alert-left">
+                  <div class="lottery-icon-badge">🎰</div>
+                  <div>
+                    <h4 style="color: #9A6715; font-weight: 800;">Tied Maximum Ceiling Bids (30% Cap)</h4>
+                    <p class="text-muted" style="font-size: 0.82rem;">Multiple members bid the statutory ceiling. Winner will be selected by Draw of Lots.</p>
+                  </div>
+                </div>
+                <button id="btn-open-lottery-modal" class="btn btn-gold btn-sm">🎲 Draw Winner</button>
+              </div>
+
+              <!-- Prized Winner Surety Alert (Section 31) -->
+              <div id="winner-surety-alert" class="card mb-3" style="display: none; background: #FEF8EC; border: 1.5px solid var(--gold-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                  <div>
+                    <h4 style="color: #9A6715; font-weight: 800;">🏆 You Won This Auction! Action Required</h4>
+                    <p class="text-muted" style="font-size: 0.82rem;">Under Section 31 of Chit Funds Act, furnish security / co-guarantor to release your prize money.</p>
+                  </div>
+                  <button id="btn-open-surety-modal" class="btn btn-gold btn-sm">Submit Surety Guarantee</button>
+                </div>
+              </div>
+
               <div class="auction-header-card card">
                 <div class="auction-status-bar">
                   <span class="status-pill status-active">LIVE AUCTION ACTIVE</span>
-                  <span class="cycle-pill">Cycle #2 of 20</span>
+                  <span class="cycle-pill" id="auction-cycle-pill">Cycle #2 of 20</span>
                 </div>
                 <h2 id="auction-group-title">Indiranagar Traders & Artisans Chit</h2>
                 <div class="auction-meta-grid">
                   <div class="meta-box">
                     <span class="meta-label">Total Pool</span>
-                    <span class="meta-val">₹5,00,000</span>
+                    <span class="meta-val" id="auction-meta-pool">₹5,00,000</span>
                   </div>
                   <div class="meta-box">
                     <span class="meta-label">Min Discount (5%)</span>
-                    <span class="meta-val">₹25,000</span>
+                    <span class="meta-val" id="auction-meta-min">₹25,000</span>
                   </div>
                   <div class="meta-box">
                     <span class="meta-label">Max Discount (30%)</span>
-                    <span class="meta-val">₹1,50,000</span>
+                    <span class="meta-val" id="auction-meta-max">₹1,50,000</span>
                   </div>
                   <div class="meta-box highlight">
                     <span class="meta-label">Current Highest Bid</span>
@@ -395,7 +492,15 @@
                         <span class="currency-symbol">₹</span>
                         <input type="number" id="bid-amount-input" class="form-input font-mono" min="25000" max="150000" step="1000" value="50000" required>
                       </div>
-                      <small class="text-hint">Between ₹25,000 and ₹1,50,000 (Section 14 statutory limit)</small>
+                      <small class="text-hint" id="bid-limit-hint">Between 5% and 30% (Section 14 statutory limit)</small>
+                    </div>
+
+                    <!-- Quick Bid Incremental Buttons -->
+                    <div class="quick-bid-buttons">
+                      <button type="button" class="btn-quick-bid" data-inc="1000">+₹1,000</button>
+                      <button type="button" class="btn-quick-bid" data-inc="5000">+₹5,000</button>
+                      <button type="button" class="btn-quick-bid" data-inc="10000">+₹10,000</button>
+                      <button type="button" class="btn-quick-bid btn-cap" id="btn-quick-cap">⚡ Max 30% Cap</button>
                     </div>
 
                     <div class="bid-summary-preview">
@@ -411,10 +516,20 @@
                         <span>Est. Dividend / Member:</span>
                         <strong id="preview-dividend">₹5,000</strong>
                       </div>
+                      <div class="summary-row" style="font-weight: 700; color: var(--primary-navy); border-top: 1px dashed var(--border-color); padding-top: 4px; margin-top: 4px;">
+                        <span>Your Net Next Installment:</span>
+                        <strong id="preview-next-installment">₹20,000</strong>
+                      </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block" id="submit-bid-btn">
                       Place Competitive Bid
+                    </button>
+
+                    <!-- Real-Time Competitor Simulation -->
+                    <button type="button" class="btn-simulate-competitor" id="btn-simulate-competitor">
+                      <span>🤖</span>
+                      <span>Simulate Other Member Bid (Live Competition)</span>
                     </button>
                   </form>
                 </div>
@@ -811,6 +926,89 @@
           </div>
           <button type="submit" class="btn btn-primary btn-block">Submit for Host Verification</button>
         </form>
+      </div>
+    </div>
+
+    <!-- SUBMIT SURETY GUARANTEE MODAL (SECTION 31) -->
+    <div id="surety-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Submit Prize Money Surety (Section 31)</h3>
+          <button class="modal-close" id="close-surety-modal-btn">&times;</button>
+        </div>
+        <form id="surety-form" class="modal-content">
+          <p class="text-muted" style="font-size: 0.82rem; margin-bottom: 12px;">
+            Under Section 31 of the Chit Funds Act 1982, every prized subscriber must furnish security/guarantor to the satisfaction of the foreman before payout release.
+          </p>
+          <input type="hidden" id="surety-payout-id">
+          <input type="hidden" id="surety-cycle-id">
+          <input type="hidden" id="surety-membership-id">
+
+          <div class="form-group">
+            <label for="surety-type">Surety Category:</label>
+            <select id="surety-type" class="form-input" required>
+              <option value="CO_GUARANTOR">Personal Co-Guarantor (Salaried / Govt Employee / Solvent Member)</option>
+              <option value="FD_RECEIPT">Fixed Deposit Receipt (FDR Lien)</option>
+              <option value="SALARY_SLIP">Salary Certificate & Corporate Undertaking</option>
+              <option value="PROPERTY_DEED">Property Title Deed / Equitable Mortgage</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="surety-guarantor-name">Guarantor Full Name:</label>
+              <input type="text" id="surety-guarantor-name" class="form-input" placeholder="e.g. Dr. Sunita Rao" value="Dr. Sunita Rao" required>
+            </div>
+            <div class="form-group">
+              <label for="surety-guarantor-phone">Guarantor Phone (+91):</label>
+              <input type="tel" id="surety-guarantor-phone" class="form-input font-mono" placeholder="9876543250" value="9876543250" maxlength="10" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="surety-guarantor-id">Guarantor Aadhaar / ID (Masked):</label>
+              <input type="text" id="surety-guarantor-id" class="form-input font-mono" placeholder="XXXX-XXXX-7788" value="XXXX-XXXX-7788" required>
+            </div>
+            <div class="form-group">
+              <label for="surety-doc-ref">Document Bond Reference #:</label>
+              <input type="text" id="surety-doc-ref" class="form-input font-mono" placeholder="e.g. DOC-BOND-2026-KA" value="DOC-INDEMNITY-BOND-2026-KA" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-gold btn-block" style="margin-top: 14px;">
+            Submit Surety to Host for Verification
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TIE-BREAKER DRAW OF LOTS (LOTTERY) MODAL -->
+    <div id="lottery-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box text-center" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3>🎲 Statutory Draw of Lots (Section 14)</h3>
+          <button class="modal-close" id="close-lottery-modal-btn">&times;</button>
+        </div>
+        <div class="modal-content">
+          <div style="font-size: 3.5rem; margin-bottom: 8px;" id="lottery-wheel-display">🎰</div>
+          <h4 style="font-weight: 800; color: var(--primary-navy);">Tied 30% Statutory Ceiling</h4>
+          <p class="text-muted" style="font-size: 0.82rem; margin-bottom: 14px;">
+            Multiple members placed the maximum discount bid. Under Section 14 of Chit Funds Act, the winner is determined by a random, transparent Draw of Lots.
+          </p>
+
+          <div class="card mb-3" style="text-align: left; background: #F8FAFC; border: 1px solid var(--border-color); padding: 12px;" id="lottery-candidates-box">
+            <!-- Populated via JS -->
+          </div>
+
+          <button id="btn-execute-lottery" class="btn btn-gold btn-block btn-lg">
+            Spin Wheel & Draw Winner
+          </button>
+
+          <div id="lottery-winner-announcement" style="display: none; margin-top: 16px;">
+            <!-- Injected via JS -->
+          </div>
+        </div>
       </div>
     </div>
   </div>

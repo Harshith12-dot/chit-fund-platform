@@ -1,42 +1,58 @@
 # Local Connectivity Chit-Fund Platform
 
-> **A Mobile-First, Locally Anchored Chit-Fund Management Platform with Double-Entry Balanced Ledger, Real-Time Auction Engine, and Role-Based Operations Console.**
+> **A Mobile-First, Locally Anchored Chit-Fund Management Platform with Double-Entry Balanced Ledger, Live Reverse-Auction Bidding Arena, Multi-Chit Portfolio Manager, and Section 31 Surety Verification Console.**
 
-Compliant with the **Indian Chit Funds Act, 1982** and **Digital Personal Data Protection (DPDP) Act, 2023**. Built with high reliability, zero external runtime dependencies, embedded relational database integrity, and tamper-evident SHA-256 audit logging.
+Compliant with the **Indian Chit Funds Act, 1982 (Act No. 40 of 1982)**, **Chit Funds (Amendment) Act, 2019**, and **Digital Personal Data Protection (DPDP) Act, 2023**. Built with high reliability, zero external runtime dependencies, embedded relational database integrity (`node:sqlite`), and tamper-evident SHA-256 audit logging.
 
 ---
 
 ## Table of Contents
 
-1. [Executive Summary & Core Principles](#executive-summary--core-principles)
-2. [Git Workflow & Clone Instructions](#git-workflow--clone-instructions)
-3. [Prerequisites & Zero-Dependency Quickstart](#prerequisites--zero-dependency-quickstart)
-4. [Dual-Portal Architecture: Join Chit vs Host Chit](#dual-portal-architecture-join-chit-vs-host-chit)
-5. [Interactive User Roles & Demo Accounts](#interactive-user-roles--demo-accounts)
-6. [Trust & Multi-Government Document Verification](#trust--multi-government-document-verification)
-7. [Double-Entry Balanced Ledger & Payment Workflows](#double-entry-balanced-ledger--payment-workflows)
-8. [Auction Mechanics & Statutory Rules](#auction-mechanics--statutory-rules)
-9. [Automated Testing & QA Verification (35/35 Tests Passing)](#automated-testing--qa-verification-3535-tests-passing)
-10. [REST API Surface](#rest-api-surface)
-11. [Production Deployment & Docker Guide](#production-deployment--docker-guide)
-12. [Security, Privacy & Compliance Controls](#security-privacy--compliance-controls)
+1. [Executive Summary & Core Principles](#1-executive-summary--core-principles)
+2. [Domain Knowledge & Legal Foundation](#2-domain-knowledge--legal-foundation)
+3. [Git Workflow & Clone Instructions](#3-git-workflow--clone-instructions)
+4. [Prerequisites & Zero-Dependency Quickstart](#4-prerequisites--zero-dependency-quickstart)
+5. [Five Purposeful Navigation Portals](#5-five-purposeful-navigation-portals)
+6. [Interactive User Roles & Demo Accounts](#6-interactive-user-roles--demo-accounts)
+7. [Trust & Multi-Government Document Verification](#7-trust--multi-government-document-verification)
+8. [Double-Entry Balanced Ledger Engine](#8-double-entry-balanced-ledger-engine)
+9. [Live Reverse-Auction Arena & Statutory Rules](#9-live-reverse-auction-arena--statutory-rules)
+10. [Section 31 Prized Subscriber Surety Verification](#10-section-31-prized-subscriber-surety-verification)
+11. [Multi-Chit Portfolio Management](#11-multi-chit-portfolio-management)
+12. [Automated Testing & QA Verification (40/40 Tests Passing)](#12-automated-testing--qa-verification-4040-tests-passing)
+13. [REST API Surface](#13-rest-api-surface)
+14. [Production Deployment & Docker Guide](#14-production-deployment--docker-guide)
+15. [Security, Privacy & Compliance Controls](#15-security-privacy--compliance-controls)
 
 ---
 
 ## 1. Executive Summary & Core Principles
 
-The **Local Connectivity Chit-Fund Platform** converts traditional, relationship-driven community savings into a secure, transparent, and auditable digital platform.
+The **Local Connectivity Chit-Fund Platform** converts traditional, relationship-driven community savings into a secure, transparent, and legally compliant digital platform.
 
 ### Core Principles
-- **Local Trust First:** Geographic proximity (Haversine distance calculation and locality matching) is used as an organic relationship and discovery signal, combined with verifiable e-KYC.
-- **Ledger Before Convenience:** Every monetary transaction enforces a balanced double-entry accounting invariant ($\sum \text{Debits} = \sum \text{Credits}$) in minor units (paise) to eliminate floating-point discrepancies.
-- **Strict Maker-Checker Separation:** Payouts to auction winners require segregation of duties—an Operations administrator initiates (Maker), and a Finance administrator authorizes (Checker).
-- **Hybrid by Design:** Both digital UPI collections and field agent cash collections post to the exact same immutable ledger.
-- **Tamper-Evident Auditability:** Every state transition and financial action records an immutable audit entry with SHA-256 hash chains.
+- **Dual Saver/Borrower Engine:** Non-prized members earn continuous dividend yields by keeping their money in the pool, while members needing liquidity borrow immediately via competitive reverse auction discount bids.
+- **Strict Statutory Adherence:** Automatically enforces the 5% minimum organizer commission floor and 30% discount ceiling under Section 14, plus tie-breaker Draw of Lots (Lottery) under Section 14(2).
+- **Section 31 Surety Safeguard:** Ensures non-prized members are protected against default by enforcing solvent surety submission (Co-Guarantor, FDR Lien, Property Deed, Salary Certificate) before prize payouts are released.
+- **Ledger Before Convenience:** Every monetary movement enforces a balanced double-entry accounting invariant ($\sum \text{Debits} = \sum \text{Credits}$) in integer minor units (paise) to completely eliminate floating-point arithmetic errors.
+- **Strict Maker-Checker Separation:** Financial payouts require segregation of duties—an Operations administrator initiates (Maker), and a Finance administrator authorizes (Checker).
+- **Hybrid by Design:** Both digital UPI collections and offline cash collections post to the exact same immutable ledger once verified by the Chit Host.
+- **Tamper-Evident Auditability:** Every state transition and financial action records an immutable audit entry with SHA-256 state hashes.
 
 ---
 
-## 2. Git Workflow & Clone Instructions
+## 2. Domain Knowledge & Legal Foundation
+
+For an in-depth regulatory and mathematical breakdown, consult [`CHIT_FUND_KNOWLEDGE_BASE.md`](file:///c:/Users/Harshith/OneDrive/Desktop/Side%20Channel%20project/local-chit-fund-platform/CHIT_FUND_KNOWLEDGE_BASE.md). Key statutes covered:
+- **Chit Funds Act, 1982 (Act No. 40 of 1982):** Primary federal legislation governing chit funds across India.
+- **Chit Funds (Amendment) Act, 2019:** Modernized commission ceilings (5% to 7% statutory cap), introduced electronic auctions, and allowed digital signatures.
+- **Section 4 & Section 20:** Prior sanction of State Registrar of Chits and mandatory 100% Bank Guarantee / Fixed Deposit in custodial escrow before soliciting subscribers.
+- **Section 14:** Minimum 5% discount bid (organizer commission) and 30% maximum statutory discount bid.
+- **Section 31:** Mandatory solvent security / surety furnished by prized subscriber before prized money disbursement.
+
+---
+
+## 3. Git Workflow & Clone Instructions
 
 The project is structured with clean, atomic Git commits for complete team accountability and traceability.
 
@@ -49,34 +65,40 @@ git clone <repository-url> local-chit-fund-platform
 # Navigate into the project directory
 cd local-chit-fund-platform
 
-# Check git status and inspect commit history
+# Verify commit log and release tags
 git log --oneline --graph --decorate
 
 # Verify current branch
 git status
+
+# Run the complete automated test suite (40 tests across 7 suites)
+npm test
+
+# Start the application server
+npm start
 ```
 
-### Git Branching Strategy
-- `main`: Stable, release-ready production baseline.
-- `feat/*`: Feature branches (e.g. `feat/double-entry-ledger`, `feat/auction-engine`).
-- `test/*`: Automated test suites and regression verification.
+### Git Branching & Tag Strategy
+- `master`: Stable, release-ready production baseline.
+- `v1.0.0`: Initial release with dual-portal join/host, e-KYC, and double-entry ledger.
+- `v1.1.0`: Live Bidding Arena, simulated competitor bidding, Draw of Lots lottery, Section 31 surety verification desk, and multi-chit portfolio management.
 
 ---
 
-## 3. Prerequisites & Zero-Dependency Quickstart
+## 4. Prerequisites & Zero-Dependency Quickstart
 
 ### Prerequisites
 - **Node.js**: Version `22.0.0` or higher (tested on Node `v24.15.0`).
-- **No external npm dependencies required!** The application leverages Node.js built-in modules:
-  - `node:sqlite` (ACID relational transactional database with WAL mode)
-  - `node:crypto` (SHA-256 state hashing and HMAC auction signing)
-  - `node:http` (High-performance HTTP server)
-  - `node:test` & `node:assert` (Built-in test runner)
+- **Zero External npm Runtime Dependencies!** The platform is engineered exclusively with Node.js built-ins:
+  - `node:sqlite` (Embedded ACID relational transactional database with WAL mode)
+  - `node:crypto` (PBKDF2 passwords, SHA-256 state hashing, HMAC auction signing)
+  - `node:http` (High-performance native HTTP server)
+  - `node:test` & `node:assert` (Native test runner)
 
 ### Starting the Platform
 
 ```bash
-# Start the web server and operations console (starts on port 3000)
+# Start the web server (defaults to port 3000)
 npm start
 
 # Or directly:
@@ -87,38 +109,66 @@ Open your browser at:
 👉 **`http://localhost:3000`**
 
 ### Re-seeding Sample Data
-If you ever want to reset the database to a fresh demonstration state:
+To reset the SQLite database to a pristine demonstration state:
 ```bash
 npm run seed
 ```
 
 ---
 
-## 4. Dual-Portal Architecture: Join Chit vs Host Chit
+## 5. Five Purposeful Navigation Portals
 
-The user interface provides two dedicated views seamlessly connected by a top navigation switcher:
+The web interface features 5 purpose-built tabs seamlessly connected by the top navigation bar:
 
-### Portal 1: "Join a Chit" (Member Experience)
-- **Top Active Dues Banner:** Displays outstanding monthly dues immediately at the top of the screen with amount, due date, cycle number, and instant **Pay via UPI** or **Pay Cash to Host** options.
+### 1. 🏛️ Live Auction Arena
+- **Real-Time Countdown Timer:** Displays ticking remaining auction time (e.g. `00:03:45`).
+- **Active Chit Selector:** Switch seamlessly between active auctions (`Cycle #2 - Indiranagar`, `Cycle #3 - Koramangala`).
+- **Live Financial Simulator Preview:** Dynamically computes in real time:
+  - Total Pool Value (e.g. ₹5,00,000)
+  - Current Highest Discount Bid (e.g. ₹95,000)
+  - Net Take-Home Lump Sum for Winner ($Pool - Discount$)
+  - Total Distributed Dividend ($Discount - 5\% Commission$)
+  - Dividend Credit per Subscriber ($Total Dividend \div Members$)
+  - Next Month's Net Installment ($Base - Dividend$)
+- **Interactive Quick-Bid Increments:**
+  - `+₹1,000`, `+₹5,000`, `+₹10,000` one-click quick bid increments.
+  - `⚡ Max 30% Cap`: Instantly places the maximum statutory discount ceiling (₹1,50,000).
+- **Simulate Competitor Bid:** Simulates another active subscriber placing a higher competitive bid, demonstrating dynamic dividend calculations and multi-participant interactions.
+- **Draw of Lots Lottery Modal:** Triggers when multiple members place tied 30% ceiling bids under Section 14(2), fairly picking the winner with instant audit logging.
+
+### 2. 💼 My Portfolio
+- **Multi-Ticket Subscriptions:** Tracks all chits subscribed by the logged-in member across multiple groups and ticket numbers (e.g., Ramesh holding Ticket #2 in Indiranagar and Ticket #7 in HSR Retailers).
+- **Prized vs Non-Prized Status:**
+  - `NON-PRIZED (BIDDER)`: Eligible to participate in the Live Auction Arena.
+  - `PRIZED SUBSCRIBER`: Shows cycle won and discount sacrificed.
+- **Financial Aggregate Metrics:** Real-time summary cards for Total Subscribed Pool Value, Lifetime Earned Dividends, and Active Due Installments.
+- **Direct Navigation Shortcuts:** Jump directly into the live bidding room or view the transaction passbook.
+
+### 3. 🔍 Explore Chits (Member Discovery)
+- **Top Active Dues Banner:** Sticky at the top of the viewport, displaying pending monthly dues with **Pay via UPI** or **Pay Cash to Host** actions.
 - **Multi-Parameter Discovery Filters:**
-  - **Locality:** Filter by specific neighborhood (e.g. Indiranagar, Koramangala, Whitefield).
+  - **Locality:** Filter by specific neighborhood (Indiranagar, Koramangala, HSR Layout, Whitefield, Jayanagar).
   - **Max Installment:** Slider filter (₹5,000 to ₹50,000/mo).
   - **Pool Size:** Filter by total fund value (₹1,00,000 to ₹10,00,000).
   - **Nearby Radius:** Proximity search (within 5 km, 10 km, or 25 km).
   - **Government Verified Only:** Toggle to show exclusively accredited groups backed by Registrar License and Bank Guarantee.
-- **Rich Chit Cards:** Shows live slots filled, duration, installment, and comprehensive host trust credentials.
+- **Rich Chit Cards:** Shows slots filled, duration, installment, and comprehensive host trust credentials.
 
-### Portal 2: "Host / Manage Chit" (Organizer Experience)
-- **Unified Account Model:** Any member can become an accredited Host by providing their State Chit Registrar License and Bank Guarantee Bond reference.
-- **New Chit Creation Wizard:** Configures pool size, monthly installments, member capacity, auction date, statutory 5% commission floor, and 30% discount ceiling.
-- **Host Offline Cash Verification Desk:**
-  - When members pay cash offline, a pending verification appears in the Host's dashboard.
-  - The Host inspects the member name, cycle, and exact amount, and clicks **"Verify & Mark Paid"**.
-  - System automatically clears member dues, posts balanced entries to the double-entry general ledger, and generates a digital receipt.
+### 4. 🛡️ Host Desk (Organizer Console)
+- **Unified Account Model:** Any member can upgrade to an accredited Host by furnishing their State Chit Registrar License and Bank Guarantee Bond reference.
+- **Host Offline Cash Verification Desk:** Inspects offline cash notes submitted by members, clicks **"Verify & Mark Paid"**, clears dues on the ledger, and issues digital receipts.
+- **Section 31 Surety Verification Desk:**
+  - Lists pending surety applications from auction winners (Co-Guarantor, FDR Lien, Property Deed, Salary Certificate).
+  - Host inspects collateral details and clicks **"Verify & Approve Surety"**, unlocking the maker-checker payout authorization lifecycle.
+- **New Chit Creation Wizard:** Configures pool size, monthly installments, member capacity, auction schedule, statutory 5% commission floor, and 30% discount ceiling.
+
+### 5. 📊 Balanced Ledger & Trust
+- **General Ledger Trial Balance:** Verifies zero variance ($\sum Debits - \sum Credits = 0$) across all chart of accounts.
+- **Cryptographic Audit Trail:** Displays immutable SHA-256 state hashes for all financial postings, auction closures, and user actions.
 
 ---
 
-## 5. Interactive User Roles & Demo Accounts
+## 6. Interactive User Roles & Demo Accounts
 
 The platform includes real password authentication (PBKDF2 with 10,000 iterations and SHA-512) alongside a **One-Click Quick Switcher** for instant testing:
 
@@ -126,10 +176,10 @@ The platform includes real password authentication (PBKDF2 with 10,000 iteration
 
 | Role | Name | Phone | Aadhaar / PAN | Host Accreditation | Key Permissions |
 |---|---|---|---|---|---|
-| **Member #1** | Ramesh Kumar | `9876543210` | `XXXX-XXXX-3210` / `ABCDE1234F` | Standard Member (Can Upgrade) | Discover groups, place bids, pay dues, view ledger |
-| **Member #2** | Priya Sharma | `9876543211` | `XXXX-XXXX-4567` / `BCDEF2345G` | Standard Member | Active bidder, settled cycle 2, view statements |
-| **Member #3** | Suresh Patel | `9876543212` | `XXXX-XXXX-8901` / `CDEFG3456H` | Standard Member | Koramangala member, cross-locality discovery |
-| **Group Organizer / Host** | Lakshmi Devi | `9876543220` | `XXXX-XXXX-1122` / `DEFGH4567I` | **KA-BLR-CR-2023-8841** / `BG-HDFC-99124` (Trust: 98/100) | Manage groups, approve members, verify offline cash |
+| **Member #1** | Ramesh Kumar | `9876543210` | `XXXX-XXXX-3210` / `ABCDE1234F` | Standard Member (Holds Tickets #2 & #7) | Discover chits, live bidding arena, multi-chit portfolio |
+| **Member #2** | Priya Sharma | `9876543211` | `XXXX-XXXX-4567` / `BCDEF2345G` | Standard Member (Holds Tickets #3 & #14) | Active bidder, cycle 2 winner, surety applicant |
+| **Member #3** | Suresh Patel | `9876543212` | `XXXX-XXXX-8901` / `CDEFG3456H` | Standard Member (Holds Ticket #5) | Koramangala member, cross-locality discovery |
+| **Group Organizer / Host** | Lakshmi Devi | `9876543220` | `XXXX-XXXX-1122` / `DEFGH4567I` | **KA-BLR-CR-2023-8841** / `BG-HDFC-99124` (Trust: 98/100) | Manage groups, verify offline cash & Section 31 sureties |
 | **Field Collector** | Anand Verma | `9876543230` | `XXXX-XXXX-3344` / `EFGHI5678J` | Ops Staff | Record assisted cash collections with physical receipt # |
 | **Operations Admin** | Rajesh Nair | `9876543240` | `XXXX-XXXX-5566` / `FGHIJ6789K` | Maker Staff | Review exceptions, initiate winner payout (Maker) |
 | **Compliance Reviewer** | Dr. Sunita Rao | `9876543250` | `XXXX-XXXX-7788` / `GHIJK7890L` | Compliance Officer | Review Aadhaar/PAN e-KYC submissions |
@@ -137,7 +187,7 @@ The platform includes real password authentication (PBKDF2 with 10,000 iteration
 
 ---
 
-## 6. Trust & Multi-Government Document Verification
+## 7. Trust & Multi-Government Document Verification
 
 To guarantee complete financial security and build community trust, the platform enforces multi-tiered verification:
 
@@ -153,35 +203,7 @@ To guarantee complete financial security and build community trust, the platform
 
 ---
 
-## 5. System Architecture & Data Model
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Responsive Client Layer                   │
-│   [ Mobile App Viewport Mode ]  |  [ Desktop Operations UI ]│
-└──────────────────────────────┬──────────────────────────────┘
-                               │ HTTP / REST API
-┌──────────────────────────────▼──────────────────────────────┐
-│                  Application Service Layer                  │
-│  ├── AuthService (RBAC, OTP, Consents)                      │
-│  ├── LocalityService (Haversine Proximity, Coarse Geocoding)│
-│  ├── GroupService (Constitution, Membership Slots)          │
-│  ├── AuctionService (Statutory Caps, Dividend Calculation)  │
-│  ├── PaymentService (UPI Intents, Webhooks, Idempotency)    │
-│  ├── PayoutService (Maker-Checker Segregation of Duties)    │
-│  ├── LedgerService (Strict Double-Entry General Ledger)     │
-│  └── AuditService (Tamper-Evident SHA-256 Audit Trail)      │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ ACID Transactions
-┌──────────────────────────────▼──────────────────────────────┐
-│           Embedded Relational Database (SQLite Engine)      │
-│  20 Normalized Tables with Strict Foreign Keys & WAL Mode   │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 6. Double-Entry Balanced Ledger Engine
+## 8. Double-Entry Balanced Ledger Engine
 
 Every monetary movement enforces **Debit = Credit** down to the single minor unit (paise: ₹1.00 = 100 paise). Floating point variables are strictly forbidden.
 
@@ -196,7 +218,7 @@ Every monetary movement enforces **Debit = Credit** down to the single minor uni
 
 ### Accounting Invariants
 1. **Contribution Payment:**
-   - Debit: `1001` (Chit Pool Bank)
+   - Debit: `1001` (Chit Pool Bank Account)
    - Credit: `1002` (Member Receivables)
 2. **Auction Settlement:**
    - Debit: `3001` (Members Capital Pool)
@@ -209,50 +231,52 @@ Every monetary movement enforces **Debit = Credit** down to the single minor uni
 
 ---
 
-## 7. Double-Entry Balanced Ledger Engine
+## 9. Live Reverse-Auction Arena & Statutory Rules
 
-Every monetary movement enforces **Debit = Credit** down to the single minor unit (paise: ₹1.00 = 100 paise). Floating point variables are strictly forbidden.
+Implemented strictly under the **Chit Funds Act, 1982 (Act No. 40 of 1982)** and 2019 Amendments:
 
-### Standard Chart of Accounts
-- `1001`: Chit Pool Bank Account (ASSET)
-- `1002`: Member Receivables (Contributions Due) (ASSET)
-- `2001`: Auction Prize Money Payable (LIABILITY)
-- `2002`: Dividend Equalization Pool (LIABILITY)
-- `3001`: Members Capital & Float (EQUITY)
-- `4001`: Organizer Commission Revenue (REVENUE - 5%)
-- `4002`: Delinquency Penalty Income (REVENUE)
-
-### Accounting Invariants
-1. **Contribution Payment:**
-   - Debit: `1001` (Chit Pool Bank)
-   - Credit: `1002` (Member Receivables)
-2. **Auction Settlement:**
-   - Debit: `3001` (Members Capital Pool)
-   - Credit: `2001` (Prize Money Payable to Winner)
-   - Credit: `4001` (Organizer Commission Revenue - 5%)
-   - Credit: `2002` (Dividend Equalization Pool for Members)
-3. **Payout Disbursement:**
-   - Debit: `2001` (Prize Money Payable)
-   - Credit: `1001` (Chit Pool Bank Account)
-
----
-
-## 8. Auction Mechanics & Statutory Rules
-
-Implemented strictly under the **Chit Funds Act, 1982 (Act No. 40 of 1982)**:
 1. **Statutory Ceiling:** Under Section 14, the maximum discount bid cannot exceed **30% of the total chit pool** (₹1,50,000 for a ₹5,00,000 chit).
 2. **Minimum Floor:** The minimum discount bid is set at the organizer's statutory commission (5% = ₹25,000).
 3. **Winner Eligibility:** A member who has already won an auction in a previous cycle of the same chit cannot submit bids in subsequent cycles.
 4. **Dividend Distribution:**
-   $$\text{Total Dividend} = \text{Winning Discount} - \text{Organizer Commission}$$
+   $$\text{Total Dividend} = \text{Winning Discount} - \text{Organizer Commission (5\%)}$$
    $$\text{Dividend Per Member} = \left\lfloor \frac{\text{Total Dividend}}{\text{Total Members}} \right\rfloor$$
-5. **Cryptographic Signing:** At close, the auction engine creates an HMAC-SHA256 signature over the winner, discount, and dividend snapshot.
+5. **Draw of Lots (Tie-Breaker Lottery):** When multiple members bid the maximum statutory ceiling (30%), the law mandates that the winner be selected through an impartial draw of lots among tied ceiling bidders.
+6. **Cryptographic Signing:** At close, the auction engine creates an HMAC-SHA256 signature over the winner, discount, and dividend snapshot.
 
 ---
 
-## 9. Automated Testing & QA Verification (35/35 Tests Passing)
+## 10. Section 31 Prized Subscriber Surety Verification
 
-The project includes an automated test suite executed with the native Node.js test runner across 6 test modules:
+Under Section 31 of the Chit Funds Act, a prized subscriber who wins the auction is legally required to furnish solvent security/sureties for future installments before prize money is disbursed:
+
+### Supported Surety Instruments:
+- **Co-Guarantor:** Fellow solvent chit members or external creditworthy guarantors.
+- **FDR Lien:** Assignment of Fixed Deposit Receipt held with an RBI-scheduled bank.
+- **Property Deed:** Registered deposit of title deeds or non-encumbrance certificate.
+- **Salary Certificate:** Irrevocable salary deduction authorization from employer.
+
+### Host Verification Workflow:
+1. Winner submits surety documentation (`POST /api/sureties`).
+2. Host reviews the surety dossier in the Host Desk (`GET /api/host/pending-sureties`).
+3. Host inspects solvency documentation and approves (`POST /api/host/verify-surety/:id`).
+4. Payout is unlocked for maker-checker disbursement.
+
+---
+
+## 11. Multi-Chit Portfolio Management
+
+Subscribers often hold multiple tickets across different chit groups for distinct financial goals (e.g. short-term working capital vs long-term wealth creation).
+
+- **Multi-Ticket Tracking:** View all ticket slots (e.g., Ticket #2 in 20-month Indiranagar, Ticket #7 in 25-month HSR Retailers).
+- **Consolidated Cashflow:** Real-time calculation of net monthly outflow ($Installments - Dividends$).
+- **Lifecycle Progression:** Clear indicators showing non-prized bidding eligibility vs prized status with remaining liability.
+
+---
+
+## 12. Automated Testing & QA Verification (40/40 Tests Passing)
+
+The project includes an automated test suite executed with the native Node.js test runner across 7 comprehensive test modules:
 
 ```bash
 npm test
@@ -260,7 +284,13 @@ npm test
 node --test tests/*.test.js
 ```
 
-### Complete Test Matrix (35 Tests, 0 Failures, ~200ms Execution):
+### Complete Test Matrix (40 Tests, 100% Pass Rate, ~340ms Execution):
+- **`tests/multiChitAndBidding.test.js` (5 tests)**:
+  - Multi-chit portfolio calculation across memberships, ticket slots, dividends, and dues.
+  - Live bidding room state with real-time financial calculations and eligible bidders.
+  - Simulated competitor bidding dynamically from an eligible member.
+  - Tied bids at maximum statutory ceiling and cryptographically fair lottery draw.
+  - Section 31 surety submission and Host verification before payout release.
 - **`tests/auth.test.js` (6 tests)**:
   - Registers new user with PBKDF2 salt/hashing and masked government IDs.
   - Prevents duplicate registrations with same mobile phone.
@@ -299,7 +329,7 @@ node --test tests/*.test.js
 
 ---
 
-## 10. REST API Surface
+## 13. REST API Surface
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -308,7 +338,14 @@ node --test tests/*.test.js
 | `POST` | `/api/auth/logout` | Revoke active session token |
 | `POST` | `/api/auth/upgrade-to-host` | Upgrade current member to accredited Host with license & guarantee |
 | `GET` | `/api/me` | Fetch active user profile, accreditation status, and permissions |
+| `GET` | `/api/portfolio` | Fetch member's multi-chit portfolio, tickets, dividends & dues |
 | `GET` | `/api/dues` | Top dues summary for member (installments, due date, cycle) |
+| `GET` | `/api/cycles/:id/bidding-room` | Live auction room state with high bid, financial preview & bidders |
+| `POST` | `/api/cycles/:id/simulate-competitor-bid` | Simulate another subscriber submitting a higher auction bid |
+| `POST` | `/api/cycles/:id/lottery` | Execute fair draw-of-lots lottery when ceiling bids are tied |
+| `POST` | `/api/sureties` | Prized subscriber submits Section 31 surety collateral |
+| `GET` | `/api/host/pending-sureties` | Host queue of pending Section 31 surety submissions |
+| `POST` | `/api/host/verify-surety/:id` | Host approves or rejects prized subscriber surety |
 | `GET` | `/api/host/pending-cash` | Host pending offline cash verification queue |
 | `POST` | `/api/host/verify-cash` | Host verifies offline cash payment and clears ledger |
 | `GET` | `/api/localities` | List geographic localities and coordinate centroids |
@@ -336,7 +373,7 @@ node --test tests/*.test.js
 
 ---
 
-## 11. Production Deployment & Docker Guide
+## 14. Production Deployment & Docker Guide
 
 See [DEPLOYMENT.md](file:///local-chit-fund-platform/DEPLOYMENT.md) for full instructions.
 
@@ -354,17 +391,14 @@ pm2 start ecosystem.config.cjs --env production
 
 ---
 
-## 12. Security, Privacy & Compliance Controls
+## 15. Security, Privacy & Compliance Controls
 
 - **DPDP Act (2023) Compliance:** Coarse coordinates anonymization (~1.1 km precision) protects member residence privacy.
 - **Aadhaar Masking:** Only the last 4 digits (`XXXX-XXXX-3210`) are ever stored. Raw biometric secrets or UIDAI tokens are excluded from persistent logs.
+- **Section 31 Surety Verification:** Protects collective savings by withholding prize money until solvent security is approved by the Host.
 - **Maker-Checker Segregation:** Dual-control enforced at the API code layer for financial disbursements.
 - **Append-Only Immutability:** Financial journals and auction outcomes cannot be deleted or mutated; disputes are addressed via explicit compensating entries.
 
 ---
 
-*Authored by the Chit-Fund Engineering Team. Designed for production scalability and regulatory compliance.*
-
----
-
-*Authored by the Chit-Fund Engineering Team. Designed for production scalability and regulatory compliance.*
+*Authored by the Chit-Fund Engineering Team. Designed for production scalability and statutory compliance under the Indian Chit Funds Act, 1982.*

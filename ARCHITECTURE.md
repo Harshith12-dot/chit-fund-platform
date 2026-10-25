@@ -62,6 +62,9 @@ erDiagram
     group_memberships ||--o{ bids : "places"
     chit_cycles ||--o{ payouts : "awards"
     group_memberships ||--o{ payouts : "benefits"
+    payouts ||--o{ sureties : "secured_by"
+    group_memberships ||--o{ sureties : "furnishes"
+    users ||--o{ sureties : "verified_by"
     chit_groups ||--o{ ledger_transactions : "records"
     ledger_transactions ||--o{ ledger_entries : "contains"
     chart_of_accounts ||--o{ ledger_entries : "classifies"
@@ -94,7 +97,7 @@ All monetary amounts are represented as 64-bit integer minor units (paise: ₹1 
 
 ## 4. Auction Mechanics & Statutory Mathematical Model
 
-The auction engine strictly implements the statutory provisions of the **Chit Funds Act, 1982 (Act 40 of 1982)**:
+The auction engine strictly implements the statutory provisions of the **Chit Funds Act, 1982 (Act 40 of 1982)** and 2019 Amendments:
 
 1. **Statutory Ceiling (Section 14):**
    $$\text{Max Discount} = 0.30 \times \text{Total Pool}$$
@@ -107,17 +110,70 @@ The auction engine strictly implements the statutory provisions of the **Chit Fu
 4. **Member Dividend Allocation:**
    $$\text{Total Dividend} = \text{Winning Discount} - \text{Organizer Commission (5\%)}$$
    $$\text{Dividend Per Member} = \left\lfloor \frac{\text{Total Dividend}}{\text{Total Members}} \right\rfloor$$
+5. **Draw of Lots (Tie-Breaker Lottery):**
+   When multiple non-prized subscribers bid the maximum statutory ceiling (30%), the law mandates that the winner be selected through an open, impartial draw of lots among tied ceiling bidders.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor SubA as Subscriber A (Borrower)
+    actor SubB as Subscriber B (Competitor)
+    participant Arena as Live Auction Arena
+    participant Engine as Auction Engine
+    participant DB as Relational SQLite DB
+
+    SubA->>Arena: Select Active Chit & Inspect Live Preview
+    Arena->>Engine: GET /api/cycles/:id/bidding-room
+    Engine-->>Arena: Current Highest Bid, Dividend Preview, Eligible Bidders
+    SubA->>Arena: Submit Reverse Bid (e.g. ₹95,000)
+    Arena->>Engine: POST /api/cycles/:id/bids
+    Engine->>DB: Check: Not already prized & Bid >= Min & Bid <= Cap
+    DB-->>Engine: Accepted
+    Engine-->>Arena: New High Bid Broadcast
+    SubB->>Arena: Click "Simulate Competitor Bid" / Quick +₹5,000
+    Arena->>Engine: POST /api/cycles/:id/simulate-competitor-bid
+    Engine-->>Arena: Competitor bids ₹1,00,000 (Dividend increases)
+    SubA->>Arena: Bid Max 30% Ceiling (₹1,50,000)
+    SubB->>Arena: Bid Max 30% Ceiling (₹1,50,000)
+    Note over Engine: Tie detected at 30% Ceiling
+    SubA->>Arena: Trigger Draw of Lots Lottery
+    Arena->>Engine: POST /api/cycles/:id/lottery
+    Engine-->>Arena: Cryptographically Fair Winner Selected
+```
 
 ---
 
-## 5. Maker-Checker Payout Authorization Lifecycle
+## 5. Section 31 Prized Subscriber Surety Verification
 
-To prevent fraud and enforce compliance with internal financial controls, payout disbursement follows a strict separation-of-duties state machine:
+Under Section 31 of the Chit Funds Act, a prized subscriber who wins the auction is legally required to furnish solvent security/sureties for the payment of future monthly installments before any prize money is disbursed:
+
+```mermaid
+stateDiagram-v2
+    [*] --> SUBMITTED: Prized Subscriber submits Guarantor / FDR / Property
+    SUBMITTED --> UNDER_REVIEW: Host inspects solvency documentation
+    UNDER_REVIEW --> APPROVED: Host verifies solvency & approves surety
+    UNDER_REVIEW --> REJECTED: Host requests additional collateral
+    APPROVED --> MAKER_CHECKER_PAYOUT: Unlocks Payout Authorization Lifecycle
+```
+
+Supported Surety Types:
+- `CO_GUARANTOR`: Solvent third-party or fellow non-prized member guarantee.
+- `FDR_LIEN`: Bank Fixed Deposit Receipt assigned to the Chit Organizer.
+- `PROPERTY_DEED`: Immovable property deposit/encumbrance certificate.
+- `SALARY_CERTIFICATE`: Irrevocable salary deduction authorization from employer.
+
+---
+
+## 6. Maker-Checker Payout Authorization Lifecycle
+
+To prevent fraud and enforce compliance with internal financial controls, payout disbursement follows a strict separation-of-duties state machine (unlocked only after Section 31 surety verification):
 
 ```mermaid
 stateDiagram-v2
     [*] --> PENDING_APPROVAL: Auction Closes
-    PENDING_APPROVAL --> INITIATED: Maker (Operations Admin) initiates payout
+    PENDING_APPROVAL --> SURETY_PENDING: Awaiting Section 31 Security
+    SURETY_PENDING --> SURETY_APPROVED: Host verifies solvent sureties
+    SURETY_APPROVED --> INITIATED: Maker (Operations Admin) initiates payout
     INITIATED --> DISBURSED: Checker (Finance Admin) approves & authorizes
     INITIATED --> REJECTED: Checker rejects with audit note
     DISBURSED --> [*]: Posts to Balanced Ledger
@@ -127,7 +183,7 @@ stateDiagram-v2
 
 ---
 
-## 6. Tamper-Evident SHA-256 Audit Trail
+## 7. Tamper-Evident SHA-256 Audit Trail
 
 All sensitive state transitions compute a deterministic SHA-256 hash of the modified object:
 

@@ -211,6 +211,25 @@ CREATE TABLE IF NOT EXISTS payouts (
     disbursed_at TEXT
 );
 
+-- 12b. Sureties & Guarantees (Section 31 of Chit Funds Act 1982)
+CREATE TABLE IF NOT EXISTS sureties (
+    id TEXT PRIMARY KEY,
+    payout_id TEXT NOT NULL REFERENCES payouts(id) ON DELETE CASCADE,
+    cycle_id TEXT NOT NULL REFERENCES chit_cycles(id),
+    membership_id TEXT NOT NULL REFERENCES group_memberships(id),
+    user_id TEXT NOT NULL REFERENCES users(id),
+    surety_type TEXT NOT NULL CHECK(surety_type IN ('CO_GUARANTOR', 'FD_RECEIPT', 'SALARY_SLIP', 'PROPERTY_DEED')),
+    guarantor_name TEXT NOT NULL,
+    guarantor_phone TEXT NOT NULL,
+    guarantor_id_masked TEXT NOT NULL,
+    document_ref TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING_HOST_APPROVAL' CHECK(status IN ('PENDING_HOST_APPROVAL', 'APPROVED', 'REJECTED')),
+    verified_by_host_id TEXT REFERENCES users(id),
+    verified_at TEXT,
+    rejection_reason TEXT,
+    submitted_at TEXT NOT NULL
+);
+
 -- 13. Chart of Accounts (Double-Entry Core)
 CREATE TABLE IF NOT EXISTS chart_of_accounts (
     id TEXT PRIMARY KEY,

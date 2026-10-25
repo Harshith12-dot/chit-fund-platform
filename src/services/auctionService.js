@@ -76,10 +76,28 @@ export function submitBid({ cycleId, membershipId, bidDiscountMinor, actorUserId
     WHERE cycle_id = ? AND status = 'VALID'
   `).get(cycleId);
 
-  if (currentHighest && currentHighest.highest !== null && discount <= currentHighest.highest) {
-    throw new Error(
-      `Bid must offer a discount higher than the current highest bid ₹${(currentHighest.highest / 100).toFixed(2)}.`
-    );
+  if (currentHighest && currentHighest.highest !== null) {
+    if (discount < currentHighest.highest) {
+      throw new Error(
+        `Bid must offer a discount higher than the current highest bid ₹${(currentHighest.highest / 100).toFixed(2)}.`
+      );
+    }
+    // If equal to current highest, only allow if both are at statutory max ceiling (tied ceiling bid)
+    if (discount === currentHighest.highest) {
+      if (discount < group.max_bid_discount_minor) {
+        throw new Error(
+          `Bid must offer a discount higher than the current highest bid ₹${(currentHighest.highest / 100).toFixed(2)}.`
+        );
+      }
+      // Check if this member has already placed a ceiling bid
+      const existingCeilingBid = database.prepare(`
+        SELECT * FROM bids
+        WHERE cycle_id = ? AND membership_id = ? AND bid_discount_minor = ? AND status = 'VALID'
+      `).get(cycleId, membershipId, discount);
+      if (existingCeilingBid) {
+        throw new Error('You have already placed a bid at the maximum statutory ceiling.');
+      }
+    }
   }
 
   const bidId = 'bid-' + randomUUID();
@@ -278,5 +296,191 @@ export function closeAuction({ cycleId, closedByUserId }, db = null) {
     snapshotData,
     payoutId,
     resultSignature
+  };
+}
+
+export function getBiddingRoomState({ cycleId, userId }, db = null) {
+  const database = db || getDatabase();
+  const cycle = database.prepare('SELECT * FROM chit_cycles WHERE id = ?').get(cycleId);
+  if (!cycle) throw new Error('Cycle not found.');
+
+  const group = database.prepare(`
+    SELECT g.*, l.name as locality_name
+    FROM chit_groups g
+    LEFT JOIN localities l ON g.locality_id = l.id
+    WHERE g.id = ?
+  `).get(cycle.group_id);
+
+  let userMembership = null;
+  if (userId) {
+    userMembership = database.prepare(`
+      SELECT * FROM group_memberships
+      WHERE group_id = ? AND user_id = ?
+    `).get(group.id, userId);
+  }
+
+  const bids = database.prepare(`
+    SELECT b.*, m.slot_number, u.phone as member_phone, p.display_name as member_name
+    FROM bids b
+    JOIN group_memberships m ON b.membership_id = m.id
+    JOIN users u ON m.user_id = u.id
+    LEFT JOIN user_profiles p ON u.id = p.user_id
+    WHERE b.cycle_id = ?
+    ORDER BY b.bid_discount_minor DESC, b.submitted_at ASC
+  `).all(cycleId);
+
+  const highestBid = bids.length > 0 ? bids[0] : null;
+
+  const ceilingBids = bids.filter(b => b.bid_discount_minor === group.max_bid_discount_minor);
+  const isLotteryRequired = ceilingBids.length > 1;
+
+  const totalPool = group.total_pool_minor;
+  const organizerCommission = Math.round(totalPool * group.organizer_commission_rate);
+  const currentDiscount = highestBid ? highestBid.bid_discount_minor : group.min_bid_discount_minor;
+  const netTakeHomeWinner = totalPool - currentDiscount;
+  const totalDividend = Math.max(0, currentDiscount - organizerCommission);
+  const dividendPerMember = Math.floor(totalDividend / group.max_members);
+  const netNextInstallment = group.monthly_contribution_minor - dividendPerMember;
+
+  const activeAuctions = database.prepare(`
+    SELECT c.id as cycle_id, c.sequence_no, c.status as cycle_status,
+           g.id as group_id, g.name as group_name, g.total_pool_minor,
+           g.monthly_contribution_minor, l.name as locality_name
+    FROM chit_cycles c
+    JOIN chit_groups g ON c.group_id = g.id
+    LEFT JOIN localities l ON g.locality_id = l.id
+    WHERE c.status IN ('AUCTION_ACTIVE', 'OPEN_FOR_PAYMENT')
+    ORDER BY c.auction_at ASC
+  `).all();
+
+  return {
+    cycle,
+    group,
+    userMembership: userMembership ? {
+      membershipId: userMembership.id,
+      slotNumber: userMembership.slot_number,
+      role: userMembership.role,
+      hasWon: userMembership.has_won_auction === 1,
+      isEligibleToBid: userMembership.status === 'ACTIVE' && userMembership.has_won_auction === 0 && cycle.status === 'AUCTION_ACTIVE'
+    } : null,
+    highestBid,
+    bids,
+    isLotteryRequired,
+    tiedCeilingMembers: ceilingBids.map(b => ({
+      membershipId: b.membership_id,
+      memberName: b.member_name,
+      slotNumber: b.slot_number,
+      bidId: b.id
+    })),
+    financials: {
+      totalPoolMinor: totalPool,
+      organizerCommissionMinor: organizerCommission,
+      currentDiscountMinor: currentDiscount,
+      discountPercent: ((currentDiscount / totalPool) * 100).toFixed(1),
+      netTakeHomeWinnerMinor: netTakeHomeWinner,
+      totalDividendMinor: totalDividend,
+      dividendPerMemberMinor: dividendPerMember,
+      nominalInstallmentMinor: group.monthly_contribution_minor,
+      netNextInstallmentMinor: netNextInstallment
+    },
+    activeAuctions
+  };
+}
+
+export function simulateCompetitorBid({ cycleId }, db = null) {
+  const database = db || getDatabase();
+  const cycle = database.prepare('SELECT * FROM chit_cycles WHERE id = ?').get(cycleId);
+  if (!cycle) throw new Error('Cycle not found.');
+  if (cycle.status !== 'AUCTION_ACTIVE') throw new Error('Auction is not active.');
+
+  const group = database.prepare('SELECT * FROM chit_groups WHERE id = ?').get(cycle.group_id);
+
+  const currentHighest = database.prepare(`
+    SELECT * FROM bids
+    WHERE cycle_id = ? AND status = 'VALID'
+    ORDER BY bid_discount_minor DESC, submitted_at ASC
+    LIMIT 1
+  `).get(cycleId);
+
+  const candidates = database.prepare(`
+    SELECT m.*, u.id as user_id, p.display_name
+    FROM group_memberships m
+    JOIN users u ON m.user_id = u.id
+    LEFT JOIN user_profiles p ON u.id = p.user_id
+    WHERE m.group_id = ? AND m.status = 'ACTIVE' AND m.has_won_auction = 0
+      AND (? IS NULL OR m.id != ?)
+  `).all(group.id, currentHighest ? currentHighest.membership_id : null, currentHighest ? currentHighest.membership_id : null);
+
+  if (candidates.length === 0) {
+    throw new Error('No eligible competitor members found to place a simulated bid.');
+  }
+
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+
+  let nextDiscount;
+  if (!currentHighest) {
+    nextDiscount = group.min_bid_discount_minor;
+  } else {
+    const step = 500000; // ₹5,000 increment
+    nextDiscount = Math.min(group.max_bid_discount_minor, currentHighest.bid_discount_minor + step);
+  }
+
+  return submitBid({
+    cycleId,
+    membershipId: chosen.id,
+    bidDiscountMinor: nextDiscount,
+    actorUserId: chosen.user_id
+  }, database);
+}
+
+export function drawAuctionLottery({ cycleId, drawnByUserId }, db = null) {
+  const database = db || getDatabase();
+  const cycle = database.prepare('SELECT * FROM chit_cycles WHERE id = ?').get(cycleId);
+  if (!cycle) throw new Error('Cycle not found.');
+
+  const group = database.prepare('SELECT * FROM chit_groups WHERE id = ?').get(cycle.group_id);
+
+  const ceilingBids = database.prepare(`
+    SELECT b.*, m.slot_number, p.display_name as member_name
+    FROM bids b
+    JOIN group_memberships m ON b.membership_id = m.id
+    JOIN users u ON m.user_id = u.id
+    LEFT JOIN user_profiles p ON u.id = p.user_id
+    WHERE b.cycle_id = ? AND b.bid_discount_minor = ? AND b.status = 'VALID'
+  `).all(cycleId, group.max_bid_discount_minor);
+
+  if (ceilingBids.length < 2) {
+    throw new Error('Tie-breaker lottery is only applicable when 2 or more members bid the maximum statutory ceiling.');
+  }
+
+  const winnerIndex = Math.floor(Math.random() * ceilingBids.length);
+  const winningBid = ceilingBids[winnerIndex];
+
+  database.prepare("UPDATE bids SET is_winning = 0 WHERE cycle_id = ?").run(cycleId);
+  database.prepare("UPDATE bids SET is_winning = 1, status = 'WINNING' WHERE id = ?").run(winningBid.id);
+
+  logAuditEvent({
+    actorId: drawnByUserId,
+    action: 'AUCTION_LOTTERY_DRAWN',
+    objectType: 'chit_cycles',
+    objectId: cycleId,
+    metadata: {
+      totalCandidates: ceilingBids.length,
+      winnerMembershipId: winningBid.membership_id,
+      winnerName: winningBid.member_name,
+      winningBidId: winningBid.id
+    },
+    db: database
+  });
+
+  return {
+    winner: {
+      bidId: winningBid.id,
+      membershipId: winningBid.membership_id,
+      memberName: winningBid.member_name,
+      slotNumber: winningBid.slot_number,
+      discountMinor: winningBid.bid_discount_minor
+    },
+    candidatesCount: ceilingBids.length
   };
 }
