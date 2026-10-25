@@ -50,18 +50,21 @@
           <button id="view-desktop-btn" class="view-btn" title="Full Console View">💻 Desktop</button>
         </div>
 
-        <!-- Role Selector -->
-        <div class="role-selector-wrapper">
-          <select id="role-select" class="role-select" title="Switch Demonstration Persona">
-            <option value="usr-member-1">Ramesh Kumar (Member #1 - Indiranagar)</option>
-            <option value="usr-member-2">Priya Sharma (Member #2 - Indiranagar)</option>
-            <option value="usr-member-3">Suresh Patel (Member #3 - Koramangala)</option>
-            <option value="usr-organizer-1">Lakshmi Devi (Govt Registered Host)</option>
-            <option value="usr-collector-1">Anand Verma (Field Collector)</option>
-            <option value="usr-opsadmin-1">Rajesh Nair (Operations Admin)</option>
-            <option value="usr-compliance-1">Dr. Sunita Rao (Compliance Reviewer)</option>
-            <option value="usr-finance-1">Vikram Malhotra (Finance Admin)</option>
-          </select>
+        <!-- User Authentication & Profile Bar -->
+        <div class="auth-bar-wrapper">
+          <div class="user-session-pill" id="user-session-pill">
+            <div class="user-avatar-initials" id="user-initials">RK</div>
+            <div class="user-session-text">
+              <span class="user-display-name" id="user-display-name">Ramesh Kumar</span>
+              <span class="user-meta-tags">
+                <span class="meta-tag-role" id="user-role-tag">MEMBER</span>
+                <span class="meta-tag-host" id="user-host-badge" style="display:none;">🏛️ HOST</span>
+              </span>
+            </div>
+            <button class="btn-become-host" id="btn-become-host" title="Register as Accredited Chit Host">🛡️ Become Host</button>
+            <button class="btn-logout" id="btn-logout" title="Log out">🚪</button>
+          </div>
+          <button class="btn btn-gold btn-sm" id="btn-open-login" style="display:none;">Log In / Register</button>
         </div>
       </div>
     </header>
@@ -602,6 +605,161 @@
         </div>
       </div>
     </main>
+
+    <!-- ================================================================ -->
+    <!-- REAL AUTHENTICATION MODAL: LOGIN & REGISTER                      -->
+    <!-- ================================================================ -->
+    <div id="auth-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box auth-box">
+        <div class="modal-header">
+          <div class="auth-tabs">
+            <button class="auth-tab-btn active" id="tab-btn-login">Account Login</button>
+            <button class="auth-tab-btn" id="tab-btn-register">Register New Account</button>
+          </div>
+          <button class="modal-close" id="close-auth-modal-btn">&times;</button>
+        </div>
+
+        <!-- 1. LOGIN PANE -->
+        <div id="auth-pane-login" class="modal-content auth-pane active-auth-pane">
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-phone">Registered 10-Digit Mobile Number:</label>
+              <div class="input-with-symbol">
+                <span class="currency-symbol" style="font-size: 0.82rem; font-weight: 700;">+91</span>
+                <input type="tel" id="login-phone" class="form-input font-mono" placeholder="9876543210" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password / PIN (or OTP):</label>
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+              <small class="text-hint">Seed test accounts password is <strong>123456</strong></small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 14px;">
+              Secure Sign In
+            </button>
+          </form>
+
+          <!-- Quick Preset Demo Accounts -->
+          <div class="demo-pills-box">
+            <div class="demo-pills-title">⚡ Or Quick-Login as Pre-configured Persona:</div>
+            <div class="demo-pills-grid">
+              <button class="demo-pill-btn" onclick="window.quickLogin('9876543210', '123456')">
+                👤 Ramesh Kumar (Member)
+              </button>
+              <button class="demo-pill-btn" onclick="window.quickLogin('9876543220', '123456')">
+                🏛️ Lakshmi Devi (Chit Host)
+              </button>
+              <button class="demo-pill-btn" onclick="window.quickLogin('9876543230', '123456')">
+                🛵 Anand Verma (Collector)
+              </button>
+              <button class="demo-pill-btn" onclick="window.quickLogin('9876543250', '123456')">
+                ⚖️ Dr. Sunita Rao (Compliance)
+              </button>
+              <button class="demo-pill-btn" onclick="window.quickLogin('9876543260', '123456')">
+                💰 Vikram Malhotra (Finance)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. REGISTER PANE -->
+        <div id="auth-pane-register" class="modal-content auth-pane" style="display: none;">
+          <form id="register-form">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="reg-name">Full Name (as per Govt ID):</label>
+                <input type="text" id="reg-name" class="form-input" placeholder="e.g. Kavitha Reddy" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-phone">10-Digit Mobile Number:</label>
+                <div class="input-with-symbol">
+                  <span class="currency-symbol" style="font-size: 0.8rem;">+91</span>
+                  <input type="tel" id="reg-phone" class="form-input font-mono" placeholder="9845012345" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="reg-password">Password / PIN:</label>
+                <input type="password" id="reg-password" class="form-input" placeholder="At least 4 chars" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-locality">Primary Locality:</label>
+                <select id="reg-locality" class="form-input">
+                  <option value="loc-1">Indiranagar (Bengaluru)</option>
+                  <option value="loc-2">Koramangala (Bengaluru)</option>
+                  <option value="loc-3">HSR Layout (Bengaluru)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="reg-aadhaar">12-Digit Aadhaar (Masked):</label>
+                <input type="text" id="reg-aadhaar" class="form-input font-mono" placeholder="1234 5678 9012" maxlength="12" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-pan">PAN Card Number:</label>
+                <input type="text" id="reg-pan" class="form-input font-mono" placeholder="ABCDE1234F" maxlength="10" required>
+              </div>
+            </div>
+
+            <!-- Host Accreditation Checkbox -->
+            <div class="host-checkbox-box">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="reg-is-host">
+                <span class="checkmark"></span>
+                <span class="chk-label"><strong>I want to host and operate chits (Accredited Organizer)</strong></span>
+              </label>
+
+              <div id="host-reg-extra" style="display: none; margin-top: 10px;">
+                <div class="form-group">
+                  <label for="reg-license">State Chit Registrar Approval / License #:</label>
+                  <input type="text" id="reg-license" class="form-input font-mono" value="KA/BLR/REG/2026/0994">
+                </div>
+                <div class="form-group">
+                  <label for="reg-bg">Bank Guarantee Bond Ref (100% Escrow):</label>
+                  <input type="text" id="reg-bg" class="form-input font-mono" value="BG-HDFC-882200">
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold btn-block" style="margin-top: 14px;">
+              Create Verified Chit Account
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPGRADE TO HOST MODAL -->
+    <div id="upgrade-host-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Upgrade Account to Accredited Chit Host</h3>
+          <button class="modal-close" id="close-upgrade-modal-btn">&times;</button>
+        </div>
+        <form id="upgrade-host-form" class="modal-content">
+          <p class="text-muted" style="font-size: 0.82rem; margin-bottom: 12px;">
+            As an Accredited Chit Host under the Chit Funds Act 1982, you can form and administer community savings groups, collect payments, and earn the 5% statutory commission.
+          </p>
+          <div class="form-group">
+            <label for="up-license">State Registrar of Chits License / Approval #:</label>
+            <input type="text" id="up-license" class="form-input font-mono" value="KA/BLR/REG/2026/0994" required>
+          </div>
+          <div class="form-group">
+            <label for="up-bg">Bank Guarantee Bond Reference (100% Pool Security):</label>
+            <input type="text" id="up-bg" class="form-input font-mono" value="BG-HDFC-882200" required>
+          </div>
+          <button type="submit" class="btn btn-gold btn-block" style="margin-top: 14px;">
+            Submit Accreditation & Enable Host Workspace
+          </button>
+        </form>
+      </div>
+    </div>
 
     <!-- UPI Online Payment Modal -->
     <div id="payment-modal" class="modal-backdrop" style="display: none;">

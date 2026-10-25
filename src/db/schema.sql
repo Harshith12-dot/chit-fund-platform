@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS localities (
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     phone TEXT UNIQUE NOT NULL,
+    password_hash TEXT,
+    password_salt TEXT,
+    is_host INTEGER DEFAULT 0,
     role TEXT NOT NULL CHECK(role IN (
         'MEMBER',
         'ORGANIZER',
@@ -51,6 +54,9 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     bank_ifsc TEXT,
     upi_id TEXT,
     pan_number_masked TEXT DEFAULT 'ABCDE1234F',
+    aadhaar_number_masked TEXT DEFAULT 'XXXX-XXXX-3210',
+    host_license_number TEXT,
+    bank_guarantee_ref TEXT,
     kyc_status TEXT DEFAULT 'UNVERIFIED' CHECK(kyc_status IN ('UNVERIFIED', 'IN_REVIEW', 'VERIFIED', 'REJECTED')),
     govt_verified INTEGER DEFAULT 1,
     reputation_score REAL DEFAULT 100.0,

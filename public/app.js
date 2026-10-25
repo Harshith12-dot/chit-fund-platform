@@ -1,6 +1,6 @@
 // ============================================================================
-// Local Connectivity Chit-Fund Platform — Application Logic
-// Dual-Portal: "Join a Chit" (Member) & "Host a Chit" (Organizer / Host)
+// Local Connectivity Chit-Fund Platform — Production Frontend Application Logic
+// Real Database, Cryptographic Authentication, Real Passwords & Combined Host-User
 // ============================================================================
 
 let currentUser = null;
@@ -21,20 +21,27 @@ function formatINRCompact(amountMinor) {
   return '₹' + val.toLocaleString('en-IN');
 }
 
-// Authenticated API Call Helper
+// Authenticated API Call Helper with Token Persistence
 async function apiCall(endpoint, options = {}) {
   const headers = options.headers || {};
+  const token = localStorage.getItem('chitfund_auth_token');
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   if (currentUser) {
     headers['X-User-Id'] = currentUser.id;
-    if (currentUser.auth_token) {
-      headers['Authorization'] = `Bearer ${currentUser.auth_token}`;
-    }
   }
   options.headers = headers;
 
   const res = await fetch(endpoint, options);
   const data = await res.json();
   if (!res.ok) {
+    if (res.status === 401 && endpoint !== '/api/auth/login' && endpoint !== '/api/auth/register') {
+      // Token expired or invalid
+      localStorage.removeItem('chitfund_auth_token');
+      openAuthModal('login');
+    }
     throw new Error(data.error || 'Server request failed');
   }
   return data;
@@ -45,20 +52,284 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupViewportToggle();
   setupPortalSwitcher();
   setupSubNavTabs();
-  setupRoleSwitcher();
   setupHostSubTabs();
   setupAuctionBiddingCalculator();
   setupPaymentModals();
+  setupAuthModalHandlers();
+  setupHostUpgradeModal();
 
-  // Load Initial User & Data
-  await switchActiveUser('usr-member-1');
+  // Try auto-login from stored token or initialize default user
+  await initUserSession();
   await loadLocalities();
   await loadTopDues();
   await loadJoinChits();
 });
 
 // ----------------------------------------------------------------------------
-// 1. DUAL PORTAL SWITCHER: "JOIN A CHIT" vs "HOST A CHIT"
+// 1. SESSION & AUTHENTICATION LIFECYCLE
+// ----------------------------------------------------------------------------
+async function initUserSession() {
+  const storedToken = localStorage.getItem('chitfund_auth_token');
+  if (storedToken) {
+    try {
+      const data = await apiCall('/api/me');
+      if (data && data.user) {
+        setCurrentUser(data.user);
+        return;
+      }
+    } catch (_) {
+      localStorage.removeItem('chitfund_auth_token');
+    }
+  }
+
+  // Fallback to default demo user (Ramesh Kumar) with valid token
+  try {
+    const loginRes = await apiCall('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '9876543210', password: 'password' })
+    });
+    localStorage.setItem('chitfund_auth_token', loginRes.token);
+    setCurrentUser(loginRes.user, loginRes.profile);
+  } catch (e) {
+    // If database was fresh, open auth modal
+    openAuthModal('login');
+  }
+}
+
+function setCurrentUser(user, profile = null) {
+  currentUser = user;
+  if (profile) currentUser.profile = profile;
+
+  const displayName = currentUser.profile?.display_name || `User ${currentUser.phone.slice(-4)}`;
+  const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+  // Header Session UI
+  document.getElementById('user-session-pill').style.display = 'flex';
+  document.getElementById('btn-open-login').style.display = 'none';
+  document.getElementById('user-initials').textContent = initials;
+  document.getElementById('user-display-name').textContent = displayName;
+  document.getElementById('user-role-tag').textContent = currentUser.role;
+
+  const isHost = currentUser.is_host === 1 || currentUser.role === 'ORGANIZER' || currentUser.role === 'SUPER_ADMIN';
+  const hostBadge = document.getElementById('user-host-badge');
+  const becomeHostBtn = document.getElementById('btn-become-host');
+
+  if (isHost) {
+    hostBadge.style.display = 'inline-block';
+    becomeHostBtn.style.display = 'none';
+  } else {
+    hostBadge.style.display = 'none';
+    becomeHostBtn.style.display = 'inline-block';
+  }
+
+  // Update Host Profile details
+  document.getElementById('host-portal-name').textContent = displayName;
+  document.getElementById('host-portal-score').textContent = (currentUser.profile?.reputation_score || 99.4) + '%';
+  if (currentUser.profile?.host_license_number) {
+    document.getElementById('host-portal-license').textContent = currentUser.profile.host_license_number;
+  }
+
+  // Auction Admin Controls
+  const auctionAdminActions = document.getElementById('auction-admin-actions');
+  if (['ORGANIZER', 'OPERATIONS_ADMIN', 'SUPER_ADMIN'].includes(currentUser.role)) {
+    auctionAdminActions.style.display = 'flex';
+  } else {
+    auctionAdminActions.style.display = 'none';
+  }
+
+  // Close Auth Modal if open
+  closeAuthModal();
+
+  // Reload current views
+  loadTopDues();
+  loadHostWorkspace();
+}
+
+function setupAuthModalHandlers() {
+  const modal = document.getElementById('auth-modal');
+  const closeBtn = document.getElementById('close-auth-modal-btn');
+  const openLoginBtn = document.getElementById('btn-open-login');
+  const logoutBtn = document.getElementById('btn-logout');
+
+  const tabBtnLogin = document.getElementById('tab-btn-login');
+  const tabBtnRegister = document.getElementById('tab-btn-register');
+  const paneLogin = document.getElementById('auth-pane-login');
+  const paneRegister = document.getElementById('auth-pane-register');
+
+  closeBtn.addEventListener('click', closeAuthModal);
+  openLoginBtn.addEventListener('click', () => openAuthModal('login'));
+
+  tabBtnLogin.addEventListener('click', () => {
+    tabBtnLogin.classList.add('active');
+    tabBtnRegister.classList.remove('active');
+    paneLogin.style.display = 'block';
+    paneRegister.style.display = 'none';
+  });
+
+  tabBtnRegister.addEventListener('click', () => {
+    tabBtnRegister.classList.add('active');
+    tabBtnLogin.classList.remove('active');
+    paneRegister.style.display = 'block';
+    paneLogin.style.display = 'none';
+  });
+
+  // Host Accreditation Checkbox in Registration
+  const isHostChk = document.getElementById('reg-is-host');
+  const hostRegExtra = document.getElementById('host-reg-extra');
+  isHostChk.addEventListener('change', () => {
+    hostRegExtra.style.display = isHostChk.checked ? 'block' : 'none';
+  });
+
+  // Handle Login Form
+  const loginForm = document.getElementById('login-form');
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById('login-phone').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+      const res = await apiCall('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
+
+      localStorage.setItem('chitfund_auth_token', res.token);
+      setCurrentUser(res.user, res.profile);
+      alert(`✔ Welcome back, ${res.profile.display_name}!`);
+    } catch (err) {
+      alert('Login Failed: ' + err.message);
+    }
+  });
+
+  // Handle Register Form
+  const regForm = document.getElementById('register-form');
+  regForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const displayName = document.getElementById('reg-name').value;
+    const phone = document.getElementById('reg-phone').value;
+    const password = document.getElementById('reg-password').value;
+    const localityId = document.getElementById('reg-locality').value;
+    const aadhaarNumber = document.getElementById('reg-aadhaar').value;
+    const panNumber = document.getElementById('reg-pan').value;
+    const isHost = isHostChk.checked;
+    const hostLicenseNumber = isHost ? document.getElementById('reg-license').value : null;
+    const bankGuaranteeRef = isHost ? document.getElementById('reg-bg').value : null;
+
+    try {
+      const res = await apiCall('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName,
+          phone,
+          password,
+          localityId,
+          aadhaarNumber,
+          panNumber,
+          isHost,
+          hostLicenseNumber,
+          bankGuaranteeRef
+        })
+      });
+
+      localStorage.setItem('chitfund_auth_token', res.token);
+      setCurrentUser(res.user, res.profile);
+      alert(`✔ Account registered successfully! Welcome to Local Chit-Fund.`);
+    } catch (err) {
+      alert('Registration Failed: ' + err.message);
+    }
+  });
+
+  // Handle Logout
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await apiCall('/api/auth/logout', { method: 'POST' });
+    } catch (_) {}
+
+    localStorage.removeItem('chitfund_auth_token');
+    currentUser = null;
+    document.getElementById('user-session-pill').style.display = 'none';
+    document.getElementById('btn-open-login').style.display = 'block';
+    openAuthModal('login');
+  });
+}
+
+function openAuthModal(tab = 'login') {
+  const modal = document.getElementById('auth-modal');
+  modal.style.display = 'flex';
+  if (tab === 'register') {
+    document.getElementById('tab-btn-register').click();
+  } else {
+    document.getElementById('tab-btn-login').click();
+  }
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+}
+
+// Quick Login Demo Helper
+window.quickLogin = async (phone, password) => {
+  try {
+    const res = await apiCall('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password })
+    });
+    localStorage.setItem('chitfund_auth_token', res.token);
+    setCurrentUser(res.user, res.profile);
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// ----------------------------------------------------------------------------
+// 2. BECOME A CHIT HOST UPGRADE MODAL
+// ----------------------------------------------------------------------------
+function setupHostUpgradeModal() {
+  const modal = document.getElementById('upgrade-host-modal');
+  const openBtn = document.getElementById('btn-become-host');
+  const closeBtn = document.getElementById('close-upgrade-modal-btn');
+  const form = document.getElementById('upgrade-host-form');
+
+  openBtn.addEventListener('click', () => {
+    if (!currentUser) {
+      openAuthModal('login');
+      return;
+    }
+    modal.style.display = 'flex';
+  });
+
+  closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hostLicenseNumber = document.getElementById('up-license').value;
+    const bankGuaranteeRef = document.getElementById('up-bg').value;
+
+    try {
+      const res = await apiCall('/api/me/upgrade-to-host', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostLicenseNumber, bankGuaranteeRef })
+      });
+
+      alert(`✔ Congratulations! Your account has been accredited as a Certified Chit Host.\nState Registrar Approval: ${hostLicenseNumber}`);
+      modal.style.display = 'none';
+      setCurrentUser(res.user, res.profile);
+
+      // Automatically switch to Host portal
+      document.getElementById('portal-host-btn').click();
+    } catch (err) {
+      alert('Upgrade Failed: ' + err.message);
+    }
+  });
+}
+
+// ----------------------------------------------------------------------------
+// 3. DUAL-PORTAL SWITCHER ("JOIN A CHIT" vs "HOST A CHIT")
 // ----------------------------------------------------------------------------
 function setupPortalSwitcher() {
   const joinBtn = document.getElementById('portal-join-btn');
@@ -78,24 +349,29 @@ function setupPortalSwitcher() {
   });
 
   hostBtn.addEventListener('click', async () => {
+    if (!currentUser) {
+      openAuthModal('login');
+      return;
+    }
+
+    // Check if user is host. If not, prompt upgrade
+    if (currentUser.is_host !== 1 && currentUser.role !== 'ORGANIZER' && currentUser.role !== 'SUPER_ADMIN') {
+      if (confirm('You are currently registered as a Member. Would you like to enable Host capabilities by providing your State Chit Registrar License?')) {
+        document.getElementById('upgrade-host-modal').style.display = 'flex';
+      }
+      return;
+    }
+
     hostBtn.classList.add('active');
     joinBtn.classList.remove('active');
     joinPortal.style.display = 'none';
     hostPortal.style.display = 'block';
     navPrimaryLabel.textContent = 'Host Workspace';
-
-    // If currently on normal member, auto switch to Host persona (Lakshmi Devi) for demonstration
-    if (currentUser && currentUser.role === 'MEMBER') {
-      const roleSelect = document.getElementById('role-select');
-      roleSelect.value = 'usr-organizer-1';
-      await switchActiveUser('usr-organizer-1');
-    }
-
     loadHostWorkspace();
   });
 }
 
-// Viewport Switcher (Mobile vs Desktop)
+// Viewport Switcher
 function setupViewportToggle() {
   const mobileBtn = document.getElementById('view-mobile-btn');
   const desktopBtn = document.getElementById('view-desktop-btn');
@@ -123,7 +399,6 @@ function setupSubNavTabs() {
       document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
 
-      // Hide all portal-sections
       document.querySelectorAll('.portal-section').forEach(s => s.style.display = 'none');
 
       if (targetSub === 'main-portal-view') {
@@ -141,44 +416,8 @@ function setupSubNavTabs() {
   });
 }
 
-// Role Switcher Setup
-function setupRoleSwitcher() {
-  const roleSelect = document.getElementById('role-select');
-  roleSelect.addEventListener('change', async (e) => {
-    await switchActiveUser(e.target.value);
-  });
-}
-
-async function switchActiveUser(userId) {
-  try {
-    const data = await apiCall('/api/users');
-    const target = data.users.find(u => u.id === userId);
-    if (!target) return;
-
-    currentUser = target;
-
-    // Update Host Profile Banner if in Host Mode
-    document.getElementById('host-portal-name').textContent = target.display_name;
-    document.getElementById('host-portal-score').textContent = (target.reputation_score || 99.4) + '%';
-
-    // Auction Admin actions visible to Organizer / Admin
-    const auctionAdminActions = document.getElementById('auction-admin-actions');
-    if (['ORGANIZER', 'OPERATIONS_ADMIN', 'SUPER_ADMIN'].includes(target.role)) {
-      auctionAdminActions.style.display = 'flex';
-    } else {
-      auctionAdminActions.style.display = 'none';
-    }
-
-    // Refresh Active Views
-    loadTopDues();
-    loadHostWorkspace();
-  } catch (err) {
-    console.error('Error switching user:', err);
-  }
-}
-
 // ----------------------------------------------------------------------------
-// 2. "GET THE DUE AT TOP" — ACTIVE CHIT DUES BANNER
+// 4. "GET THE DUE AT TOP" — ACTIVE CHIT DUES BANNER
 // ----------------------------------------------------------------------------
 async function loadTopDues() {
   const container = document.getElementById('top-dues-section');
@@ -193,7 +432,7 @@ async function loadTopDues() {
         <div class="active-due-card">
           <div class="due-top-row">
             <span class="due-pill upcoming">Account Status</span>
-            <span style="font-size: 0.8rem; color: #94A3B8;">User: ${currentUser.display_name}</span>
+            <span style="font-size: 0.8rem; color: #94A3B8;">User: ${currentUser.profile?.display_name || currentUser.phone}</span>
           </div>
           <div class="due-chit-title">No Pending Chit Obligations</div>
           <p class="due-subinfo">You have no overdue payments. Browse verified chits below to join an active group.</p>
@@ -202,7 +441,6 @@ async function loadTopDues() {
       return;
     }
 
-    // Grab first active pending due
     const topDue = dues.find(d => d.status === 'PENDING') || dues[0];
     const isPaid = topDue.status === 'PAID';
     const isOverdue = new Date(topDue.due_at) < new Date() && !isPaid;
@@ -256,7 +494,7 @@ async function loadTopDues() {
 }
 
 // ----------------------------------------------------------------------------
-// 3. JOIN CHIT: MULTI-PARAMETER FILTERS & CHIT CARDS
+// 5. JOIN CHIT: MULTI-PARAMETER FILTERS & CHIT CARDS
 // ----------------------------------------------------------------------------
 async function loadLocalities() {
   try {
@@ -301,7 +539,6 @@ async function loadJoinChits() {
     const data = await apiCall(url);
     let groups = data.groups || [];
 
-    // Apply Client Filters
     if (govtOnly) {
       groups = groups.filter(g => g.host_license_number);
     }
@@ -419,6 +656,11 @@ async function loadJoinChits() {
 }
 
 async function handleJoinRequest(group) {
+  if (!currentUser) {
+    openAuthModal('login');
+    return;
+  }
+
   if (confirm(`Do you wish to submit an enrolment request for "${group.name}"?\nMonthly Obligation: ${formatINRCompact(group.monthly_contribution_minor)} for ${group.total_months} months.\nGoverned under Chit Funds Act 1982.`)) {
     try {
       await apiCall(`/api/groups/${group.id}/join-requests`, {
@@ -435,7 +677,7 @@ async function handleJoinRequest(group) {
 }
 
 // ----------------------------------------------------------------------------
-// 4. HOST / MANAGE PORTAL: DASHBOARD & ONE-CLICK CASH VERIFICATION
+// 6. HOST / MANAGE PORTAL: DASHBOARD & ONE-CLICK CASH VERIFICATION
 // ----------------------------------------------------------------------------
 function setupHostSubTabs() {
   const tabs = document.querySelectorAll('.host-tab-btn');
@@ -454,7 +696,6 @@ function setupHostSubTabs() {
     });
   });
 
-  // Host Create Chit Form
   const createForm = document.getElementById('host-chit-form');
   createForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -612,13 +853,13 @@ async function loadHostJoinRequests() {
 }
 
 // ----------------------------------------------------------------------------
-// 5. PAYMENT MODALS (ONLINE UPI vs OFFLINE CASH)
+// 7. PAYMENT MODALS (ONLINE UPI vs OFFLINE CASH)
 // ----------------------------------------------------------------------------
 function setupPaymentModals() {
   // 1. Online Modal
   const payModal = document.getElementById('payment-modal');
   const closePayBtn = document.getElementById('close-modal-btn');
-  closePayBtn.addEventListener('click', () => payModal.style.display = 'none');
+  closePayBtn.addEventListener('click', () => { payModal.style.display = 'none'; });
 
   const apps = ['gpay', 'phonepe', 'paytm'];
   apps.forEach(app => {
@@ -653,7 +894,7 @@ function setupPaymentModals() {
   // 2. Offline Cash Modal
   const offlineModal = document.getElementById('offline-cash-modal');
   const closeOfflineBtn = document.getElementById('close-offline-modal-btn');
-  closeOfflineBtn.addEventListener('click', () => offlineModal.style.display = 'none');
+  closeOfflineBtn.addEventListener('click', () => { offlineModal.style.display = 'none'; });
 
   const offlineForm = document.getElementById('offline-cash-form');
   offlineForm.addEventListener('submit', async (e) => {
@@ -691,7 +932,7 @@ function openOfflineCashModal(due) {
 }
 
 // ----------------------------------------------------------------------------
-// 6. LIVE AUCTION ROOM & BIDDING
+// 8. LIVE AUCTION ROOM & BIDDING
 // ----------------------------------------------------------------------------
 function setupAuctionBiddingCalculator() {
   const bidInput = document.getElementById('bid-amount-input');
@@ -833,7 +1074,7 @@ async function loadAuctionRoom() {
 }
 
 // ----------------------------------------------------------------------------
-// 7. BALANCED GENERAL LEDGER
+// 9. BALANCED GENERAL LEDGER
 // ----------------------------------------------------------------------------
 async function loadLedger() {
   try {
@@ -882,11 +1123,10 @@ async function loadLedger() {
 }
 
 // ----------------------------------------------------------------------------
-// 8. COMPLIANCE & GOVERNANCE VIEW
+// 10. COMPLIANCE & GOVERNANCE VIEW
 // ----------------------------------------------------------------------------
 async function loadCompliance() {
   try {
-    // Payouts Maker-Checker
     const payoutsData = await apiCall('/api/payouts');
     const payoutsBody = document.getElementById('payouts-body');
     payoutsBody.innerHTML = '';
@@ -938,7 +1178,6 @@ async function loadCompliance() {
       payoutsBody.appendChild(tr);
     });
 
-    // KYC Queue
     const kycData = await apiCall('/api/kyc/cases');
     const kycBody = document.getElementById('kyc-table');
     kycBody.innerHTML = '';
@@ -957,7 +1196,6 @@ async function loadCompliance() {
       `;
     });
 
-    // Audit Trail
     const auditData = await apiCall('/api/audit-events?limit=10');
     const auditBody = document.getElementById('audit-table');
     auditBody.innerHTML = '';

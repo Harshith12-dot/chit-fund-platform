@@ -1,6 +1,7 @@
 import { getDatabase } from '../db/index.js';
 import { logAuditEvent } from '../services/auditService.js';
 import { postBalancedTransaction } from '../services/ledgerService.js';
+import { hashPassword } from '../services/authService.js';
 
 export function seedDatabase(db = null) {
   const database = db || getDatabase();
@@ -79,15 +80,16 @@ export function seedDatabase(db = null) {
   ];
 
   const insertUser = database.prepare(`
-    INSERT INTO users (id, phone, role, status, auth_token, created_at)
-    VALUES (?, ?, ?, 'ACTIVE', ?, ?)
+    INSERT INTO users (id, phone, password_hash, password_salt, is_host, role, status, auth_token, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)
   `);
 
   const insertProfile = database.prepare(`
     INSERT INTO user_profiles (
       user_id, display_name, email, locality_id, referral_code,
-      bank_account_no, bank_ifsc, upi_id, pan_number_masked, kyc_status, govt_verified, reputation_score, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ABCDE1234F', ?, 1, ?, ?, ?)
+      bank_account_no, bank_ifsc, upi_id, pan_number_masked, aadhaar_number_masked,
+      host_license_number, bank_guarantee_ref, kyc_status, govt_verified, reputation_score, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ABCDE1234F', 'XXXX-XXXX-3210', ?, ?, ?, 1, ?, ?, ?)
   `);
 
   const insertConsent = database.prepare(`
@@ -95,12 +97,18 @@ export function seedDatabase(db = null) {
     VALUES (?, ?, '1.0', '1.0', 1, 1, '127.0.0.1', ?)
   `);
 
+  const defaultCredentials = hashPassword('123456');
+
   users.forEach((u, i) => {
     const token = 'tok-demo-' + u.role.toLowerCase();
-    insertUser.run(u.id, u.phone, u.role, token, now);
+    const isHost = u.role === 'ORGANIZER' ? 1 : 0;
+    insertUser.run(u.id, u.phone, defaultCredentials.hash, defaultCredentials.salt, isHost, u.role, token, now);
     insertProfile.run(
       u.id, u.name, u.email, u.loc, `REF${10000 + i}`,
-      u.acc, u.ifsc, u.upi, u.kyc, u.rep, now, now
+      u.acc, u.ifsc, u.upi,
+      isHost ? 'KA/BLR/REG/2026/0491' : null,
+      isHost ? 'BG-HDFC-992100' : null,
+      u.kyc, u.rep, now, now
     );
     insertConsent.run('cns-' + u.id, u.id, now);
   });

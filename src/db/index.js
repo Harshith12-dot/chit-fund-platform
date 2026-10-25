@@ -11,7 +11,7 @@ let instance = null;
 export function getDatabase(dbPath = null) {
   if (instance) return instance;
 
-  const targetPath = dbPath || join(__dirname, '../../chitfund.db');
+  const targetPath = dbPath || process.env.DB_PATH || join(__dirname, '../../data/chitfund.db');
   const db = new DatabaseSync(targetPath);
 
   // Enable WAL mode for high concurrency and Foreign Keys for relational integrity

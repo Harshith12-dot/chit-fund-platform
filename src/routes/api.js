@@ -87,6 +87,23 @@ export async function handleApiRequest(req, res) {
     // ------------------------------------------------------------------------
     // IDENTITY & AUTH
     // ------------------------------------------------------------------------
+    if (method === 'POST' && pathname === '/api/auth/register') {
+      const body = await readBody();
+      const result = authService.registerUser(body);
+      return json({ success: true, ...result }, 201);
+    }
+
+    if (method === 'POST' && pathname === '/api/auth/login') {
+      const body = await readBody();
+      const result = authService.loginWithPassword(body);
+      return json({ success: true, ...result });
+    }
+
+    if (method === 'POST' && pathname === '/api/auth/logout') {
+      authService.logoutUser(authHeader);
+      return json({ success: true, message: 'Logged out successfully.' });
+    }
+
     if (method === 'POST' && pathname === '/api/auth/otp') {
       const body = await readBody();
       if (!body.phone) return error('Phone number is required.');
@@ -104,6 +121,17 @@ export async function handleApiRequest(req, res) {
     if (method === 'GET' && pathname === '/api/me') {
       if (!currentUser) return error('Unauthorized. Please log in.', 401);
       return json({ success: true, user: currentUser });
+    }
+
+    if (method === 'POST' && pathname === '/api/me/upgrade-to-host') {
+      if (!currentUser) return error('Unauthorized. Please log in.', 401);
+      const body = await readBody();
+      const result = authService.upgradeToHost({
+        userId: currentUser.id,
+        hostLicenseNumber: body.hostLicenseNumber,
+        bankGuaranteeRef: body.bankGuaranteeRef
+      });
+      return json({ success: true, ...result });
     }
 
     if (method === 'GET' && pathname === '/api/me/dues') {
